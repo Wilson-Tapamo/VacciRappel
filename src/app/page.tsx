@@ -26,6 +26,8 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const [children, setChildren] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedChildForCalendar, setSelectedChildForCalendar] = useState<any>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -80,8 +82,6 @@ export default function Dashboard() {
     );
   }
 
-  const [selectedChildForCalendar, setSelectedChildForCalendar] = useState<any>(null);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const refreshData = () => {
     fetch("/api/children")
