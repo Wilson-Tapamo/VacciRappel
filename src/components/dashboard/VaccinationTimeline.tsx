@@ -3,13 +3,6 @@
 import { motion } from "framer-motion";
 import { Check, Clock, ChevronRight } from "lucide-react";
 
-const vaccines = [
-    { id: 1, name: "DTP (Diphtérie-Tétanos-Polio)", date: "12 Déc 2025", status: "completed", age: "11 mois" },
-    { id: 2, name: "Hépatite B (Hévac B)", date: "15 Jan 2026", status: "completed", age: "12 mois" },
-    { id: 3, name: "ROR (Rougeole-Oreillons-Rubéole)", date: "02 Fév 2026", status: "completed", age: "13 mois" },
-    { id: 4, name: "DTP - Rappel", date: "12 Mars 2026", status: "upcoming", age: "14 mois" },
-    { id: 5, name: "Méningocoque C", date: "15 Juin 2026", status: "upcoming", age: "17 mois" },
-];
 
 export default function VaccinationTimeline({ childrenData }: { childrenData: any[] }) {
     // Collect all completed vaccinations from all children
