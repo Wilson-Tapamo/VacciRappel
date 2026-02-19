@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const session = await getServerSession(authOptions);
 
@@ -15,7 +15,7 @@ export async function PATCH(
 
     try {
         const { status } = await req.json();
-        const { id } = params;
+        const { id } = await params;
 
         // Verify the record belongs to a child owned by this user
         const record = await prisma.vaccinationRecord.findUnique({
