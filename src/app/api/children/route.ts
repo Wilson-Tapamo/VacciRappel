@@ -34,13 +34,16 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { name, birthDate, gender } = await req.json();
+        const { name, birthDate, gender, image, medicalInfo, medicalBookletScan } = await req.json();
 
         const child = await prisma.child.create({
             data: {
                 name,
                 birthDate: new Date(birthDate),
                 gender,
+                image,
+                medicalInfo,
+                medicalBookletScan,
                 userId: (session.user as any).id,
             },
         });

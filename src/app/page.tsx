@@ -90,7 +90,7 @@ export default function Dashboard() {
             <span className="absolute top-4 right-4 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full" />
           </button>
           {!hasChildren && (
-            <Link href="/profile" className="flex items-center gap-3 px-6 py-4 gradient-primary text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-sky-400/30 hover:scale-105 transition-all">
+            <Link href="/children/add" className="flex items-center gap-3 px-6 py-4 gradient-primary text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-sky-400/30 hover:scale-105 transition-all">
               <Plus size={18} />
               Ajouter Enfant
             </Link>

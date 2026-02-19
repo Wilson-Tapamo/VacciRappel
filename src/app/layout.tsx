@@ -8,6 +8,7 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import { usePathname } from "next/navigation";
 
 import { Providers } from "@/providers/session-provider";
+import { cn } from "@/lib/utils";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -48,8 +49,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
 }

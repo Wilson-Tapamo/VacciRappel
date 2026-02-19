@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import Link from "next/link";
+
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -90,9 +92,9 @@ export default function ProfilePage() {
                     <h1 className="text-3xl font-black text-slate-900">Aucun enfant ajouté</h1>
                     <p className="text-slate-500">Commencez par créer le profil de votre premier enfant pour suivre son calendrier vaccinal.</p>
                 </div>
-                <button className="px-10 py-4 gradient-primary text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-sky-200 hover:scale-105 transition-all">
+                <Link href="/children/add" className="px-10 py-4 gradient-primary text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-sky-200 hover:scale-105 transition-all">
                     Ajouter un Profil
-                </button>
+                </Link>
             </div>
         );
     }
@@ -125,9 +127,9 @@ export default function ProfilePage() {
                         )}
                     </button>
                 ))}
-                <button className="w-14 h-14 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-sky-500 hover:text-sky-500 transition-all active:scale-95 bg-white/30">
+                <Link href="/children/add" className="w-14 h-14 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-sky-500 hover:text-sky-500 transition-all active:scale-95 bg-white/30">
                     <Plus size={24} />
-                </button>
+                </Link>
             </div>
 
             {/* Swipeable Profile Content */}
