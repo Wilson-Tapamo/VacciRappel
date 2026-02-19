@@ -28,7 +28,17 @@ export default function Dashboard() {
       fetch("/api/children")
         .then(res => res.json())
         .then(data => {
-          setChildren(data);
+          if (Array.isArray(data)) {
+            setChildren(data);
+          } else {
+            console.error("API Error:", data);
+            setChildren([]);
+          }
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error("Fetch Error:", err);
+          setChildren([]);
           setLoading(false);
         });
     }
