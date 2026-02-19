@@ -5,101 +5,73 @@ const prisma = new PrismaClient()
 const vaccines = [
     {
         name: "BCG",
-        description: "Protection contre la tuberculose. Administré à la naissance par voie intradermique.",
+        description: "Protection contre la tuberculose.",
         recommendedAge: 0,
         importance: "Fondamental",
-        protection: "Tuberculose"
+        protection: "Tuberculose",
+        longDescription: "Le BCG est crucial au Cameroun pour protéger les nouveau-nés contre les formes graves de tuberculose. Il est administré gratuitement dans tous les centres de santé publique dès la naissance.",
+        benefits: [
+            "Prévient les formes graves de tuberculose chez l'enfant",
+            "Protection efficace dès la naissance",
+            "Sûr et mondialement reconnu"
+        ],
+        sideEffectsCommon: ["Petite cicatrice au point d'injection", "Légère rougeur"],
+        sideEffectsRare: ["Légère fièvre"],
+        didYouKnow: "La tuberculose reste une préoccupation majeure de santé publique, et la vaccination précoce est la meilleure arme de prévention."
     },
     {
-        name: "VPO 0",
-        description: "Vaccin Polio Oral. Protection contre la poliomyélite.",
-        recommendedAge: 0,
-        importance: "Indispensable",
-        protection: "Poliomyélite"
-    },
-    {
-        name: "Pentavalent 1",
-        description: "Combine la protection contre la Diphtérie, le Tétanos, la Coqueluche, l'Hépatite B et l'Haemophilus influenzae type b.",
-        recommendedAge: 1, // 6 weeks ~ 1.5 months
-        importance: "Critique",
-        protection: "Diphtérie, Tétanos, Coqueluche, Hépatite B, Hib"
-    },
-    {
-        name: "PCV13-1",
-        description: "Vaccin contre les infections à pneumocoques (pneumonie, méningite).",
-        recommendedAge: 1,
-        importance: "Élevé",
-        protection: "Pneumocoque"
-    },
-    {
-        name: "Rota-1",
-        description: "Protection contre les gastro-entérites graves à Rotavirus.",
-        recommendedAge: 1,
-        importance: "Élevé",
-        protection: "Rotavirus"
-    },
-    {
-        name: "Pentavalent 2",
-        description: "Deuxième dose du Pentavalent.",
-        recommendedAge: 2, // 10 weeks ~ 2.5 months
-        importance: "Critique",
-        protection: "Diphtérie, Tétanos, Coqueluche, Hépatite B, Hib"
-    },
-    {
-        name: "PCV13-2",
-        description: "Deuxième dose contre le pneumocoque.",
-        recommendedAge: 2,
-        importance: "Élevé",
-        protection: "Pneumocoque"
-    },
-    {
-        name: "Rota-2",
-        description: "Deuxième dose contre le Rotavirus.",
-        recommendedAge: 2,
-        importance: "Élevé",
-        protection: "Rotavirus"
-    },
-    {
-        name: "Pentavalent 3",
-        description: "Troisième dose du Pentavalent.",
-        recommendedAge: 3, // 14 weeks ~ 3.5 months
-        importance: "Critique",
-        protection: "Diphtérie, Tétanos, Coqueluche, Hépatite B, Hib"
-    },
-    {
-        name: "PCV13-3",
-        description: "Troisième dose contre le pneumocoque.",
-        recommendedAge: 3,
-        importance: "Élevé",
-        protection: "Pneumocoque"
-    },
-    {
-        name: "VPO-3",
-        description: "Troisième dose du Vaccin Polio Oral.",
-        recommendedAge: 3,
-        importance: "Indispensable",
-        protection: "Poliomyélite"
-    },
-    {
-        name: "ROR 1",
-        description: "Rougeole-Oreillons-Rubéole. Première dose.",
+        name: "ROR (Rougeole-Oreillons-Rubéole)",
+        description: "Triple protection contre la rougeole, les oreillons et la rubéole.",
         recommendedAge: 9,
-        importance: "Élevé",
-        protection: "Rougeole, Oreillons, Rubéole"
+        importance: "Critique",
+        protection: "Rougeole, Oreillons, Rubéole",
+        longDescription: "Le vaccin ROR est essentiel au Cameroun où des épidémies de rougeole peuvent survenir. Il fait partie du programme national de vaccination et protège contre des complications graves comme la pneumonie et l'encéphalite.",
+        benefits: [
+            "Prévient les maladies infantiles graves",
+            "Protège la communauté grâce à l'immunité collective",
+            "Une seule injection offre une triple protection",
+            "Efficace à 97% pour prévenir la rougeole"
+        ],
+        sideEffectsCommon: ["Légère fièvre", "Petite éruption cutanée passagère"],
+        sideEffectsRare: ["Gonflement des ganglions"],
+        didYouKnow: "La rougeole est l'une des principales causes de décès chez les jeunes enfants dans le monde, mais le vaccin ROR est extrêmement efficace pour la prévenir.",
+        fullProtectionList: [
+            { name: "Rougeole", description: "Infection virale très contagieuse causant fièvre et éruption cutanée", icon: "🦠" },
+            { name: "Oreillons", description: "Infection virale affectant les glandes salivaires", icon: "😷" },
+            { name: "Rubéole", description: "Rougeole allemande, peut causer de graves malformations congénitales", icon: "🌡️" }
+        ]
+    },
+    {
+        name: "Pentavalent",
+        description: "5 protections en une seule injection.",
+        recommendedAge: 1, // 6 weeks
+        importance: "Indispensable",
+        protection: "Diphtérie, Tétanos, Coqueluche, Hépatite B, Hib",
+        longDescription: "Le Pentavalent simplifie le calendrier vaccinal en protégeant contre 5 maladies majeures. Il est indispensable pour la survie et le bon développement de l'enfant au Cameroun.",
+        benefits: [
+            "Protection globale contre 5 maladies",
+            "Réduit le nombre d'injections nécessaires",
+            "Prévient les infections respiratoires et hépatiques"
+        ],
+        sideEffectsCommon: ["Douleur au point d'injection", "Fièvre modérée"],
+        sideEffectsRare: ["Cris persistants"],
+        didYouKnow: "Avant l'introduction du Pentavalent, les enfants devaient recevoir plusieurs injections séparées pour ces mêmes maladies."
     },
     {
         name: "Fièvre Jaune",
-        description: "Vaccination contre la fièvre jaune. Une dose assure souvent une protection à vie.",
+        description: "Protection contre la fièvre jaune.",
         recommendedAge: 9,
         importance: "Obligatoire",
-        protection: "Fièvre Jaune"
-    },
-    {
-        name: "Paludisme (RTS,S)",
-        description: "Protection contre le paludisme. Introduit pour les enfants à partir de 6 mois.",
-        recommendedAge: 6,
-        importance: "Nouveau / Essentiel",
-        protection: "Paludisme"
+        protection: "Fièvre jaune",
+        longDescription: "La fièvre jaune est endémique dans certaines régions. La vaccination est obligatoire pour tous et souvent exigée pour les voyages internationaux.",
+        benefits: [
+            "Protection à vie avec une seule dose",
+            "Indispensable pour voyager en toute sécurité",
+            "Prévient une maladie aux conséquences souvent fatales"
+        ],
+        sideEffectsCommon: ["Légers maux de tête", "Douleurs musculaires"],
+        sideEffectsRare: ["Réaction allergique"],
+        didYouKnow: "Une dose unique est suffisante pour conférer une immunité protectrice à vie contre la maladie."
     }
 ]
 
@@ -110,22 +82,29 @@ async function main() {
             where: { name: v.name }
         })
 
+        const vaccineData = {
+            name: v.name,
+            description: v.description,
+            recommendedAge: v.recommendedAge,
+            importance: v.importance,
+            protection: v.protection,
+            longDescription: v.longDescription,
+            benefits: v.benefits,
+            sideEffectsCommon: v.sideEffectsCommon,
+            sideEffectsRare: v.sideEffectsRare,
+            didYouKnow: v.didYouKnow,
+            fullProtectionList: v.fullProtectionList || [],
+        }
+
         if (existing) {
             await prisma.vaccine.update({
                 where: { id: existing.id },
-                data: {
-                    description: v.description,
-                    recommendedAge: v.recommendedAge,
-                }
+                data: vaccineData
             })
             console.log(`Updated vaccine: ${v.name}`)
         } else {
             await prisma.vaccine.create({
-                data: {
-                    name: v.name,
-                    description: v.description,
-                    recommendedAge: v.recommendedAge,
-                },
+                data: vaccineData,
             })
             console.log(`Created vaccine: ${v.name}`)
         }

@@ -173,16 +173,14 @@ export default function Dashboard() {
           <div className="space-y-6">
             <h2 className="text-xl font-black text-slate-800 uppercase tracking-widest text-[11px] px-2 text-center pb-4">Consulter les Vaccins</h2>
             <div className="glass-card p-10 border-white/60 shadow-xl shadow-sky-900/5 space-y-8 bg-white/40">
-              <div className="relative group">
+              <Link href="/vaccines" className="block relative group">
                 <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-500 transition-colors">
-                  <Activity size={20} />
+                  <Search size={20} />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Rechercher un vaccin (BCG, Polio, Pentavalent...)"
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-5 pl-14 pr-6 text-sm font-medium focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500/50 outline-none transition-all placeholder:text-slate-400"
-                />
-              </div>
+                <div className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-5 pl-14 pr-6 text-sm font-medium text-slate-400 group-hover:border-sky-500/50 transition-all cursor-text flex items-center">
+                  Rechercher un vaccin (BCG, Polio, Pentavalent...)
+                </div>
+              </Link>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
@@ -191,9 +189,9 @@ export default function Dashboard() {
                   { name: "VPO", protection: "Poliomyélite", age: "Naissance, 6, 10, 14 sem" },
                   { name: "Fièvre Jaune", protection: "Fièvre Jaune", age: "9 mois" }
                 ].map((v, i) => (
-                  <motion.button
+                  <Link
                     key={i}
-                    whileHover={{ scale: 1.02, y: -2 }}
+                    href="/vaccines"
                     className="p-6 bg-white border border-slate-100 rounded-3xl text-left hover:shadow-lg hover:shadow-sky-900/5 transition-all flex items-center justify-between group"
                   >
                     <div className="space-y-1">
@@ -203,9 +201,17 @@ export default function Dashboard() {
                     <div className="p-3 bg-sky-50 rounded-2xl text-sky-600 group-hover:bg-sky-500 group-hover:text-white transition-all">
                       <ChevronRight size={18} />
                     </div>
-                  </motion.button>
+                  </Link>
                 ))}
               </div>
+
+              <Link
+                href="/vaccines"
+                className="flex items-center justify-center gap-2 py-4 text-sky-600 font-black uppercase tracking-widest text-[10px] hover:gap-4 transition-all"
+              >
+                Voir toute la bibliothèque
+                <ArrowRight size={16} />
+              </Link>
             </div>
           </div>
         </div>

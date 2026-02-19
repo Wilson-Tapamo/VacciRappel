@@ -34,11 +34,19 @@ model Child {
 
 
 model Vaccine {
-  id             String   @id @default(cuid())
-  name           String
-  description    String?
-  recommendedAge Int      // in months
-  records        VaccinationRecord[]
+  id                 String   @id @default(cuid())
+  name               String
+  description        String?
+  recommendedAge     Int      // in months
+  importance         String?  // Obligatoire, Fondamental, etc.
+  protection         String?  // Summary of what it protects against
+  longDescription    String?  @db.Text // Importance in Cameroon
+  benefits           String[] 
+  sideEffectsCommon  String[]
+  sideEffectsRare    String[]
+  didYouKnow         String?  @db.Text
+  fullProtectionList Json?    // Structured list of protections
+  records            VaccinationRecord[]
 }
 
 model VaccinationRecord {
