@@ -48,6 +48,28 @@ export async function POST(req: Request) {
             },
         });
 
+        // Automatically schedule vaccinations
+        const allVaccines = await prisma.vaccine.findMany();
+
+        if (allVaccines.length > 0) {
+            const birthDateObj = new Date(birthDate);
+            const vaccinationRecords = allVaccines.map(vaccine => {
+                const scheduledDate = new Date(birthDateObj);
+                scheduledDate.setMonth(scheduledDate.getMonth() + vaccine.recommendedAge);
+
+                return {
+                    childId: child.id,
+                    vaccineId: vaccine.id,
+                    status: "PENDING",
+                    date: scheduledDate,
+                };
+            });
+
+            await prisma.vaccinationRecord.createMany({
+                data: vaccinationRecords,
+            });
+        }
+
         return NextResponse.json(child, { status: 201 });
     } catch (error) {
         return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
