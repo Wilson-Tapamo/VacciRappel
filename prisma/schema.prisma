@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String?
+  phone       String   @unique
+  password    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  children    Child[]
+}
+
+model Child {
+  id            String   @id @default(cuid())
+  name          String
+  birthDate     DateTime
+  gender        String
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  vaccinations  VaccinationRecord[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Vaccine {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  recommendedAge Int      // in months
+  records        VaccinationRecord[]
+}
+
+model VaccinationRecord {
+  id        String   @id @default(cuid())
+  childId   String
+  vaccineId String
+  status    String   // DONE, PENDING, OVERDUE
+  date      DateTime
+  child     Child    @relation(fields: [childId], references: [id])
+  vaccine   Vaccine  @relation(fields: [vaccineId], references: [id])
+  createdAt DateTime @default(now())
+}
