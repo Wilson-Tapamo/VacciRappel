@@ -45,7 +45,7 @@ export default function VaccinationTimeline({ childrenData }: { childrenData: an
                             </div>
                             <div className="flex-1 pb-2">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-1">
-                                    <h4 className="font-bold text-slate-800">{record.vaccine.name}</h4>
+                                    <h4 className="font-bold text-slate-800">{record.vaccine?.name}</h4>
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${record.status === 'DONE' ? 'bg-emerald-100/50 text-emerald-700' : 'bg-slate-100 text-slate-500'
                                         }`}>
                                         {record.status === 'DONE' ? 'Effectué' : 'À venir'}
@@ -56,7 +56,7 @@ export default function VaccinationTimeline({ childrenData }: { childrenData: an
                                         {new Date(record.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                                     </p>
                                     <div className="w-1 h-1 bg-slate-200 rounded-full" />
-                                    <p className="text-sm text-slate-500">{record.vaccine.recommendedAge} mois</p>
+                                    <p className="text-sm text-slate-500">{record.vaccine?.recommendedAge} mois</p>
                                 </div>
                             </div>
                         </motion.div>

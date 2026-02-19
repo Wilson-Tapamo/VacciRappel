@@ -296,6 +296,15 @@ export default function Dashboard() {
           </motion.div>
         </div>
       </div>
+
+      <ChildVaccinationModal
+        child={selectedChildForCalendar}
+        isOpen={isCalendarOpen}
+        onClose={() => setIsCalendarOpen(false)}
+        onUpdate={() => {
+          refreshData();
+        }}
+      />
     </div>
   );
 }
