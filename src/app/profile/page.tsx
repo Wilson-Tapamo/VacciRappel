@@ -15,11 +15,15 @@ import {
     Plus,
     ChevronRight,
     ChevronLeft,
-    ShieldCheck
+    ShieldCheck,
+    CheckCircle2,
+    Clock,
+    Activity
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Link from "next/link";
+import ChildVaccinationModal from "@/components/dashboard/ChildVaccinationModal";
 
 
 function cn(...inputs: ClassValue[]) {
@@ -59,14 +63,19 @@ export default function ProfilePage() {
     const [children, setChildren] = useState<any[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-    useEffect(() => {
+    const fetchChildren = () => {
         fetch("/api/children")
             .then(res => res.json())
             .then(data => {
                 setChildren(data);
                 setLoading(false);
             });
+    };
+
+    useEffect(() => {
+        fetchChildren();
     }, []);
 
     const activeProfile = children[currentIndex];
@@ -234,6 +243,57 @@ export default function ProfilePage() {
                                     </div>
                                 </section>
 
+                                <section className="glass-card p-10 space-y-8">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <h3 className="text-xl font-black text-slate-800 flex items-center gap-3">
+                                                <ShieldCheck className="text-sky-500" size={28} />
+                                                Santé & Vaccinations
+                                            </h3>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-10">Statut du calendrier vaccinal</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsCalendarOpen(true)}
+                                            className="px-6 py-3 bg-sky-50 text-sky-600 rounded-2xl font-black uppercase tracking-widest text-[9px] hover:bg-sky-500 hover:text-white transition-all shadow-sm"
+                                        >
+                                            Gérer le Calendrier
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="p-6 bg-slate-50 rounded-3xl space-y-4">
+                                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                                                <span className="text-slate-400">Taux de Complétion</span>
+                                                <span className="text-sky-600">
+                                                    {Math.round(((activeProfile.vaccinations?.filter((v: any) => v.status === 'DONE').length || 0) / (activeProfile.vaccinations?.length || 1)) * 100)}%
+                                                </span>
+                                            </div>
+                                            <div className="h-2.5 bg-white rounded-full overflow-hidden p-0.5 shadow-inner">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${Math.round(((activeProfile.vaccinations?.filter((v: any) => v.status === 'DONE').length || 0) / (activeProfile.vaccinations?.length || 1)) * 100)}%` }}
+                                                    className="h-full gradient-primary rounded-full"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 bg-slate-50 rounded-3xl flex items-center justify-between">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Prochain Rappel</p>
+                                                <p className="text-sm font-bold text-slate-800">
+                                                    {activeProfile.vaccinations?.find((v: any) => v.status === 'PENDING')
+                                                        ? activeProfile.vaccinations.find((v: any) => v.status === 'PENDING').vaccine.name
+                                                        : "Aucun"
+                                                    }
+                                                </p>
+                                            </div>
+                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-sky-500 shadow-sm">
+                                                <Clock size={20} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
                                 <section className="glass-card p-10">
                                     <div className="flex items-center justify-between mb-10">
                                         <h3 className="text-xl font-black text-slate-800">Croissance Mensuelle</h3>
@@ -276,6 +336,15 @@ export default function ProfilePage() {
                     </motion.div>
                 </AnimatePresence>
             </div>
+
+            <ChildVaccinationModal
+                child={activeProfile}
+                isOpen={isCalendarOpen}
+                onClose={() => setIsCalendarOpen(false)}
+                onUpdate={() => {
+                    fetchChildren();
+                }}
+            />
         </div>
     );
 }

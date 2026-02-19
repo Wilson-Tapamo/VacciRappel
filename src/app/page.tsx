@@ -12,13 +12,15 @@ import {
   Heart,
   Baby,
   Search,
-  ArrowRight
+  ArrowRight,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import VaccinationTimeline from "@/components/dashboard/VaccinationTimeline";
 import RecentAlerts from "@/components/dashboard/RecentAlerts";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import ChildVaccinationModal from "@/components/dashboard/ChildVaccinationModal";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -78,6 +80,19 @@ export default function Dashboard() {
     );
   }
 
+  const [selectedChildForCalendar, setSelectedChildForCalendar] = useState<any>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const refreshData = () => {
+    fetch("/api/children")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setChildren(data);
+        }
+      });
+  };
+
   const hasChildren = children.length > 0;
 
   // Calculate real stats
@@ -92,9 +107,15 @@ export default function Dashboard() {
   const upcomingReminders = children.reduce((acc, child) => {
     const upcoming = child.vaccinations?.filter((v: any) => {
       const date = new Date(v.date);
+      date.setHours(0, 0, 0, 0); // Midnight comparison
+
       const now = new Date();
+      now.setHours(0, 0, 0, 0); // Midnight comparison
+
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(now.getDate() + 30);
+      thirtyDaysFromNow.setHours(23, 59, 59, 999);
+
       return v.status !== 'DONE' && date >= now && date <= thirtyDaysFromNow;
     })?.length || 0;
     return acc + upcoming;
@@ -175,45 +196,76 @@ export default function Dashboard() {
           <div className="space-y-6">
             <h2 className="text-xl font-black text-slate-800 uppercase tracking-widest text-[11px] px-2 text-center pb-4">Consulter les Vaccins</h2>
             <div className="glass-card p-10 border-white/60 shadow-xl shadow-sky-900/5 space-y-8 bg-white/40">
-              <Link href="/vaccines" className="block relative group">
-                <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-500 transition-colors">
-                  <Search size={20} />
-                </div>
-                <div className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-5 pl-14 pr-6 text-sm font-medium text-slate-400 group-hover:border-sky-500/50 transition-all cursor-text flex items-center">
-                  Rechercher un vaccin (BCG, Polio, Pentavalent...)
-                </div>
-              </Link>
+              {children.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {children.map((child: any) => (
+                    <div key={child.id} className="p-8 bg-white rounded-[2.5rem] shadow-xl shadow-sky-900/5 group border-2 border-transparent hover:border-sky-100 transition-all flex flex-col justify-between">
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-5">
+                          <div className="w-20 h-20 bg-sky-50 rounded-3xl overflow-hidden border-4 border-white shadow-md group-hover:scale-105 transition-transform">
+                            {child.image ? (
+                              <img src={child.image} alt={child.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-sky-500">
+                                <Baby size={32} />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-black text-slate-800 line-clamp-1">{child.name}</h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                              {new Date(child.birthDate).toLocaleDateString('fr-FR')}
+                            </p>
+                          </div>
+                        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { name: "BCG", protection: "Tuberculose", age: "Naissance" },
-                  { name: "Pentavalent", protection: "Diphtérie, Tétanos...", age: "6, 10, 14 sem" },
-                  { name: "VPO", protection: "Poliomyélite", age: "Naissance, 6, 10, 14 sem" },
-                  { name: "Fièvre Jaune", protection: "Fièvre Jaune", age: "9 mois" }
-                ].map((v, i) => (
-                  <Link
-                    key={i}
-                    href="/vaccines"
-                    className="p-6 bg-white border border-slate-100 rounded-3xl text-left hover:shadow-lg hover:shadow-sky-900/5 transition-all flex items-center justify-between group"
-                  >
-                    <div className="space-y-1">
-                      <h4 className="font-black text-slate-800 group-hover:text-sky-600 transition-colors">{v.name}</h4>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Protège de : {v.protection}</p>
+                        <div className="bg-slate-50/50 p-5 rounded-3xl space-y-4">
+                          <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                            <span className="text-slate-400">Progression</span>
+                            <span className="text-sky-600">
+                              {Math.round(((child.vaccinations?.filter((v: any) => v.status === 'DONE').length || 0) / (child.vaccinations?.length || 1)) * 100)}%
+                            </span>
+                          </div>
+                          <div className="h-3 bg-slate-100 rounded-full overflow-hidden p-0.5">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.round(((child.vaccinations?.filter((v: any) => v.status === 'DONE').length || 0) / (child.vaccinations?.length || 1)) * 100)}%` }}
+                              className="h-full gradient-primary rounded-full shadow-lg shadow-sky-400/20"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setSelectedChildForCalendar(child);
+                          setIsCalendarOpen(true);
+                        }}
+                        className="mt-8 w-full py-4 bg-slate-50 hover:bg-sky-500 text-slate-500 hover:text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 group/btn active:scale-95"
+                      >
+                        <CalendarIcon size={16} />
+                        Gérer Calendrier
+                      </button>
                     </div>
-                    <div className="p-3 bg-sky-50 rounded-2xl text-sky-600 group-hover:bg-sky-500 group-hover:text-white transition-all">
-                      <ChevronRight size={18} />
-                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white/40 border-2 border-white/60 p-20 rounded-[3rem] text-center space-y-8 backdrop-blur-sm">
+                  <div className="w-32 h-32 bg-sky-50 rounded-[2.5rem] flex items-center justify-center mx-auto text-sky-500 animate-pulse">
+                    <Baby size={60} />
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className="text-3xl font-black text-slate-800 tracking-tight">C'est un peu vide ici !</h3>
+                    <p className="text-slate-500 font-medium max-w-sm mx-auto">
+                      Ajoutez votre premier enfant pour commencer à suivre son calendrier de vaccination personnalisé.
+                    </p>
+                  </div>
+                  <Link href="/add-child" className="inline-flex items-center gap-3 px-10 py-5 gradient-primary text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-2xl shadow-sky-200 transition-all hover:scale-105 active:scale-95">
+                    <Plus size={20} />
+                    Ajouter un Enfant
                   </Link>
-                ))}
-              </div>
-
-              <Link
-                href="/vaccines"
-                className="flex items-center justify-center gap-2 py-4 text-sky-600 font-black uppercase tracking-widest text-[10px] hover:gap-4 transition-all"
-              >
-                Voir toute la bibliothèque
-                <ArrowRight size={16} />
-              </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
