@@ -10,7 +10,9 @@ import {
   ShieldCheck,
   Activity,
   Heart,
-  Baby
+  Baby,
+  Search,
+  ArrowRight
 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import VaccinationTimeline from "@/components/dashboard/VaccinationTimeline";
