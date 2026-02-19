@@ -100,22 +100,45 @@ export default function Dashboard() {
   const doneVaccinations = children.reduce((acc, child) =>
     acc + (child.vaccinations?.filter((v: any) => v.status === 'DONE')?.length || 0), 0);
 
+  // Calculate real stats
+  const allVaccinations = children.flatMap(child => child.vaccinations || []);
+  const totalVaccinations = allVaccinations.length;
+  const doneVaccinations = allVaccinations.filter((v: any) => v.status === 'DONE').length;
+
   const vaccinationRate = totalVaccinations > 0
     ? Math.round((doneVaccinations / totalVaccinations) * 100)
     : 0;
 
-  const upcomingReminders = children.reduce((acc, child) => {
+  // Find the single next vaccine (closest in the future and pending)
+  const pendingVaccinations = allVaccinations
+    .filter((v: any) => v.status !== 'DONE')
+    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const nextVaccination = pendingVaccinations[0];
+  let nextVaccineInfo = { name: "Aucun", days: 0 };
+
+  if (nextVaccination) {
+    const nextDate = new Date(nextVaccination.date);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const diffTime = nextDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    nextVaccineInfo = {
+      name: nextVaccination.vaccine?.name || "Vaccin",
+      days: diffDays
+    };
+  }
+
+  const upcomingRemindersCount = children.reduce((acc, child) => {
     const upcoming = child.vaccinations?.filter((v: any) => {
       const date = new Date(v.date);
-      date.setHours(0, 0, 0, 0); // Midnight comparison
-
+      date.setHours(0, 0, 0, 0);
       const now = new Date();
-      now.setHours(0, 0, 0, 0); // Midnight comparison
-
+      now.setHours(0, 0, 0, 0);
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(now.getDate() + 30);
       thirtyDaysFromNow.setHours(23, 59, 59, 999);
-
       return v.status !== 'DONE' && date >= now && date <= thirtyDaysFromNow;
     })?.length || 0;
     return acc + upcoming;
@@ -156,26 +179,34 @@ export default function Dashboard() {
         <StatCard
           title="Taux de Vaccination"
           value={hasChildren ? `${vaccinationRate}%` : "0%"}
-          change={vaccinationRate > 80 ? "+5%" : ""}
+          progress={hasChildren ? vaccinationRate : undefined}
           icon={ShieldCheck}
           color="sky"
         />
         <StatCard
-          title="Prochains Rappels"
-          value={hasChildren ? upcomingReminders.toString() : "0"}
+          title="Prochain Rappel"
+          value={hasChildren && nextVaccineInfo.name !== "Aucun"
+            ? nextVaccineInfo.name
+            : "Aucun"
+          }
+          description={hasChildren && nextVaccineInfo.name !== "Aucun"
+            ? `Dans ${nextVaccineInfo.days} jour(s)`
+            : "Pas de rappel prévu"
+          }
           icon={Calendar}
-          change="Sous 30 jours"
           color="indigo"
+          isUrgent={nextVaccineInfo.days <= 7 && nextVaccineInfo.name !== "Aucun"}
         />
         <StatCard
-          title="Suivi Croissance"
-          value={hasChildren ? "Optimal" : "-"}
+          title="Alertes actives"
+          value={hasChildren ? upcomingRemindersCount.toString() : "0"}
+          description="Sous 30 jours"
           icon={Activity}
           color="emerald"
         />
         <StatCard
-          title="Alertes Santé"
-          value="0"
+          title="Points Santé"
+          value="120"
           icon={Heart}
           color="rose"
         />
