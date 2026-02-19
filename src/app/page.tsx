@@ -71,7 +71,7 @@ export default function Dashboard() {
   // Calculate real stats
   const totalVaccinations = children.reduce((acc, child) => acc + (child.vaccinations?.length || 0), 0);
   const doneVaccinations = children.reduce((acc, child) =>
-    acc + (child.vaccinations?.filter((v: any) => v.status === 'DONE').length || 0), 0);
+    acc + (child.vaccinations?.filter((v: any) => v.status === 'DONE')?.length || 0), 0);
 
   const vaccinationRate = totalVaccinations > 0
     ? Math.round((doneVaccinations / totalVaccinations) * 100)
@@ -84,7 +84,7 @@ export default function Dashboard() {
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(now.getDate() + 30);
       return v.status !== 'DONE' && date >= now && date <= thirtyDaysFromNow;
-    }).length || 0;
+    })?.length || 0;
     return acc + upcoming;
   }, 0);
 
