@@ -26,7 +26,7 @@ const colorMap = {
     indigo: "bg-indigo-50 text-indigo-600",
 };
 
-export default function StatCard({ title, value, description, change, icon: Icon, color, isUrgent }: StatCardProps) {
+export default function StatCard({ title, value, description, change, icon: Icon, color, isUrgent, progress }: StatCardProps) {
     return (
         <motion.div
             whileHover={{ y: -5 }}

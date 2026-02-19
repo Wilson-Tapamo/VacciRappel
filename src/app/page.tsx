@@ -96,10 +96,6 @@ export default function Dashboard() {
   const hasChildren = children.length > 0;
 
   // Calculate real stats
-  const totalVaccinations = children.reduce((acc, child) => acc + (child.vaccinations?.length || 0), 0);
-  const doneVaccinations = children.reduce((acc, child) =>
-    acc + (child.vaccinations?.filter((v: any) => v.status === 'DONE')?.length || 0), 0);
-
   // Calculate real stats
   const allVaccinations = children.flatMap(child => child.vaccinations || []);
   const totalVaccinations = allVaccinations.length;
