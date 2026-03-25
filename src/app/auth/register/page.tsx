@@ -11,7 +11,9 @@ import {
     ShieldCheck,
     Smartphone,
     CheckCircle2,
-    ShieldAlert
+    ShieldAlert,
+    Heart,
+    Baby
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -117,6 +119,20 @@ export default function RegisterPage() {
             {/* Background Blobs */}
             <div className="bg-blob bg-sky-100 -top-20 -right-20 opacity-20" />
             <div className="bg-blob bg-indigo-100 -bottom-20 -left-20 opacity-20" />
+
+            {/* Decorative floating icons */}
+            <div className="absolute top-20 left-20 w-16 h-16 bg-white/60 rounded-3xl flex items-center justify-center backdrop-blur-sm shadow-lg animate-float hidden lg:flex">
+                <ShieldCheck className="text-sky-500" size={28} />
+            </div>
+            <div className="absolute top-40 right-40 w-12 h-12 bg-rose-100/80 rounded-2xl flex items-center justify-center animate-float-reverse hidden lg:flex" style={{ animationDelay: '1s' }}>
+                <Heart className="text-rose-400" size={20} />
+            </div>
+            <div className="absolute bottom-40 right-20 w-14 h-14 bg-teal-100/80 rounded-2xl flex items-center justify-center animate-float hidden lg:flex" style={{ animationDelay: '2s' }}>
+                <Baby className="text-teal-500" size={24} />
+            </div>
+            <div className="absolute bottom-20 left-40 w-10 h-10 bg-amber-100/80 rounded-xl flex items-center justify-center animate-float-reverse hidden lg:flex" style={{ animationDelay: '1.5s' }}>
+                <Lock className="text-amber-500" size={18} />
+            </div>
 
             <div className="max-w-md w-full relative z-10">
                 {/* Progress Bar */}

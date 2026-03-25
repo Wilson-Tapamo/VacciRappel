@@ -13,6 +13,9 @@ import {
   Baby,
   Search,
   ArrowRight,
+  TrendingUp,
+  Sparkles,
+  Zap,
   Calendar as CalendarIcon
 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
@@ -141,30 +144,47 @@ export default function Dashboard() {
   }, 0);
 
   return (
-    <div className="space-y-10 pb-10">
+    <div className="relative space-y-12 pb-20 overflow-hidden">
+      {/* Background Decorative Blobs */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-200/20 rounded-full blur-3xl -mr-64 -mt-32 pointer-events-none animate-pulse-slow" />
+      <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] bg-violet-200/20 rounded-full blur-3xl -ml-48 pointer-events-none" />
+      <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-teal-200/10 rounded-full blur-2xl pointer-events-none" />
+
+      {/* Floating Illustration Icons */}
+      <div className="hidden lg:block absolute top-20 right-10 p-4 glass-card rounded-2xl animate-float shadow-xl border-white/80">
+        <Sparkles className="text-amber-400" size={32} />
+      </div>
+      <div className="hidden lg:block absolute bottom-40 left-10 p-5 glass-card rounded-[2rem] animate-float-reverse shadow-xl border-white/80" style={{ animationDelay: '1s' }}>
+        <Heart className="text-rose-400 fill-rose-400/10" size={40} />
+      </div>
+
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-            Bonjour, <span className="text-sky-600">{session?.user?.name}</span> 👋
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8 pt-4">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 backdrop-blur-sm rounded-full border border-white shadow-sm mb-2">
+            <Zap size={14} className="text-amber-500 fill-amber-500" />
+            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Tableau de bord intelligent</span>
+          </div>
+          <h1 className="text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            Bonjour, <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-violet-600">{session?.user?.name}</span> 👋
           </h1>
-          <p className="text-slate-500 font-medium tracking-tight">
+          <p className="text-slate-500 font-bold tracking-tight text-lg">
             {hasChildren
-              ? `Vous gérez les profils de ${children.length} enfant(s).`
-              : "Commencez par ajouter le profil de votre enfant."
+              ? `Aujourd'hui, vous protégez ${children.length} enfant(s).`
+              : "Prêt à sécuriser l'avenir de vos enfants ?"
             }
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="p-4 glass rounded-3xl text-slate-600 relative hover:scale-105 transition-all">
-            <Bell size={22} />
-            <span className="absolute top-4 right-4 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full" />
+        <div className="flex items-center gap-4">
+          <button className="p-5 glass-card rounded-[2rem] text-slate-600 relative hover:scale-110 transition-all border-white shadow-lg active:scale-95 group">
+            <Bell size={24} className="group-hover:text-sky-500 transition-colors" />
+            <span className="absolute top-5 right-5 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-pulse" />
           </button>
           {!hasChildren && (
-            <Link href="/children/add" className="flex items-center gap-3 px-6 py-4 gradient-primary text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-sky-400/30 hover:scale-105 transition-all">
-              <Plus size={18} />
-              Ajouter Enfant
+            <Link href="/children/add" className="flex items-center gap-4 px-8 py-5 gradient-primary text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-2xl shadow-sky-400/40 hover:scale-105 active:scale-95 transition-all">
+              <Plus size={22} strokeWidth={3} />
+              Ajouter un Enfant
             </Link>
           )}
         </div>
@@ -222,42 +242,58 @@ export default function Dashboard() {
           {/* New Vaccine Discovery Section */}
           <div className="space-y-6">
             <h2 className="text-xl font-black text-slate-800 uppercase tracking-widest text-[11px] px-2 text-center pb-4">Consulter les Vaccins</h2>
-            <div className="glass-card p-10 border-white/60 shadow-xl shadow-sky-900/5 space-y-8 bg-white/40">
+            <div className="relative group/discovery">
+              {/* Decorative background for the section */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-sky-50/20 rounded-[3rem] -m-4 pointer-events-none border border-white/60 shadow-inner" />
+              
               {children.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {children.map((child: any) => (
-                    <div key={child.id} className="p-8 bg-white rounded-[2.5rem] shadow-xl shadow-sky-900/5 group border-2 border-transparent hover:border-sky-100 transition-all flex flex-col justify-between">
-                      <div className="space-y-6">
+                    <motion.div 
+                      key={child.id} 
+                      whileHover={{ y: -8 }}
+                      className="p-8 bg-white/90 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-sky-900/5 group border border-white hover:border-sky-200 transition-all flex flex-col justify-between relative overflow-hidden"
+                    >
+                      {/* Card accent blob */}
+                      <div className="absolute -top-10 -right-10 w-32 h-32 bg-sky-50 rounded-full blur-2xl group-hover:bg-sky-100/50 transition-colors" />
+                      
+                      <div className="relative z-10 space-y-6">
                         <div className="flex items-center gap-5">
-                          <div className="w-20 h-20 bg-sky-50 rounded-3xl overflow-hidden border-4 border-white shadow-md group-hover:scale-105 transition-transform">
+                          <div className="w-20 h-20 bg-gradient-to-br from-sky-50 to-violet-50 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl group-hover:scale-110 transition-transform duration-500">
                             {child.image ? (
                               <img src={child.image} alt={child.name} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-sky-500">
-                                <Baby size={32} />
+                              <div className="w-full h-full flex items-center justify-center text-sky-400">
+                                <Baby size={36} strokeWidth={1.5} />
                               </div>
                             )}
                           </div>
                           <div>
-                            <h3 className="text-xl font-black text-slate-800 line-clamp-1">{child.name}</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                              {new Date(child.birthDate).toLocaleDateString('fr-FR')}
-                            </p>
+                            <h3 className="text-2xl font-black text-slate-800 line-clamp-1 tracking-tight">{child.name}</h3>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                    Né le {new Date(child.birthDate).toLocaleDateString('fr-FR')}
+                                </p>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="bg-slate-50/50 p-5 rounded-3xl space-y-4">
-                          <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
-                            <span className="text-slate-400">Progression</span>
-                            <span className="text-sky-600">
+                        <div className="bg-slate-50/80 backdrop-blur-sm p-6 rounded-[2rem] space-y-4 border border-white/50 shadow-inner">
+                          <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest">
+                            <span className="text-slate-400 flex items-center gap-2">
+                                <TrendingUp size={14} className="text-sky-500" />
+                                Progression
+                            </span>
+                            <span className="text-sky-600 bg-sky-50 px-3 py-1 rounded-full border border-sky-100">
                               {Math.round(((child.vaccinations?.filter((v: any) => v.status === 'DONE').length || 0) / (child.vaccinations?.length || 1)) * 100)}%
                             </span>
                           </div>
-                          <div className="h-3 bg-slate-100 rounded-full overflow-hidden p-0.5">
+                          <div className="h-4 bg-white/50 rounded-full overflow-hidden p-1 border border-slate-100 shadow-sm">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.round(((child.vaccinations?.filter((v: any) => v.status === 'DONE').length || 0) / (child.vaccinations?.length || 1)) * 100)}%` }}
-                              className="h-full gradient-primary rounded-full shadow-lg shadow-sky-400/20"
+                              className="h-full bg-gradient-to-r from-sky-400 via-sky-500 to-violet-500 rounded-full shadow-lg shadow-sky-400/30"
                             />
                           </div>
                         </div>
@@ -268,29 +304,43 @@ export default function Dashboard() {
                           setSelectedChildForCalendar(child);
                           setIsCalendarOpen(true);
                         }}
-                        className="mt-8 w-full py-4 bg-slate-50 hover:bg-sky-500 text-slate-500 hover:text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 group/btn active:scale-95"
+                        className="relative z-10 mt-8 w-full py-5 bg-slate-900 group-hover:bg-gradient-to-r group-hover:from-sky-500 group-hover:to-violet-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-3 shadow-xl shadow-slate-200 group-hover:shadow-sky-200 active:scale-95"
                       >
-                        <CalendarIcon size={16} />
-                        Gérer Calendrier
+                        <CalendarIcon size={18} />
+                        Gérer le Calendrier
+                        <ArrowRight size={16} className="opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all" />
                       </button>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               ) : (
-                <div className="bg-white/40 border-2 border-white/60 p-20 rounded-[3rem] text-center space-y-8 backdrop-blur-sm">
-                  <div className="w-32 h-32 bg-sky-50 rounded-[2.5rem] flex items-center justify-center mx-auto text-sky-500 animate-pulse">
-                    <Baby size={60} />
-                  </div>
-                  <div className="space-y-4">
-                    <h3 className="text-3xl font-black text-slate-800 tracking-tight">C'est un peu vide ici !</h3>
-                    <p className="text-slate-500 font-medium max-w-sm mx-auto">
-                      Ajoutez votre premier enfant pour commencer à suivre son calendrier de vaccination personnalisé.
-                    </p>
-                  </div>
-                  <Link href="/add-child" className="inline-flex items-center gap-3 px-10 py-5 gradient-primary text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-2xl shadow-sky-200 transition-all hover:scale-105 active:scale-95">
-                    <Plus size={20} />
-                    Ajouter un Enfant
-                  </Link>
+                <div className="relative z-10 p-1 bg-gradient-to-br from-sky-200 via-violet-200 to-rose-200 rounded-[3.5rem] shadow-2xl shadow-sky-900/10 active:scale-[0.99] transition-transform">
+                    <div className="bg-white/90 backdrop-blur-xl p-20 rounded-[3.4rem] text-center space-y-8">
+                        <div className="relative w-40 h-40 mx-auto">
+                            <div className="absolute inset-0 bg-sky-100 rounded-[3rem] animate-pulse" />
+                            <div className="absolute inset-0 flex items-center justify-center text-sky-500">
+                                <Baby size={80} strokeWidth={1} />
+                            </div>
+                            {/* Small floating bubbles around the baby icon */}
+                            <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -right-4 w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-500 rotate-12 shadow-lg">
+                                <Heart size={20} fill="currentColor" />
+                            </motion.div>
+                            <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 4, delay: 1 }} className="absolute -bottom-2 -left-6 w-14 h-14 bg-violet-100 rounded-3xl flex items-center justify-center text-violet-500 -rotate-12 shadow-lg">
+                                <ShieldCheck size={24} />
+                            </motion.div>
+                        </div>
+                        <div className="space-y-4">
+                            <h3 className="text-4xl font-black text-slate-800 tracking-tight leading-tight">Créez votre premier <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-violet-500">Carnet de Santé</span></h3>
+                            <p className="text-slate-500 font-bold max-w-sm mx-auto text-lg opacity-80">
+                                Le suivi vaccinal n'a jamais été aussi simple, coloré et rassurant.
+                            </p>
+                        </div>
+                        <Link href="/add-child" className="group relative inline-flex items-center gap-4 px-12 py-6 gradient-primary text-white rounded-[2.5rem] font-black uppercase tracking-widest text-sm shadow-2xl shadow-sky-400/40 transition-all hover:scale-105 active:scale-95">
+                            <Plus size={24} strokeWidth={4} />
+                            Ajouter un profil Enfant
+                            <div className="absolute inset-0 rounded-[2.5rem] bg-white opacity-0 group-hover:opacity-20 transition-opacity" />
+                        </Link>
+                    </div>
                 </div>
               )}
             </div>

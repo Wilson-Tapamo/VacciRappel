@@ -7,16 +7,18 @@ import {
     MapPin,
     ScanLine,
     User,
-    HeartPulse
+    HeartPulse,
+    Building2,
+    ShieldCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const navItems = [
     { name: "Accueil", href: "/", icon: Home },
-    { name: "Scanner", href: "/scan", icon: ScanLine },
+    { name: "Hôpitaux", href: "/hospitals", icon: Building2 },
     { name: "Support", href: "/support", icon: HeartPulse, isPrimary: true },
-    { name: "Carte", href: "/map", icon: MapPin },
+    { name: "Bibliothèque", href: "/vaccine-library", icon: ShieldCheck },
     { name: "Profil", href: "/profile", icon: User },
 ];
 
