@@ -121,6 +121,34 @@ const hospitals = [
     }
 ];
 
+interface Hospital {
+    id: number;
+    name: string;
+    shortName: string;
+    type: string;
+    specialty: string;
+    rating: number;
+    reviews: number;
+    openHours: string;
+    address: string;
+    phone: string;
+    website: string | null;
+    distance: string;
+    vaccineServices: string[];
+    certifications: string[];
+    bedCount: number;
+    doctorCount: number;
+    color: string;
+    gradient: string;
+    bgColor: string;
+    tagColor: string;
+    image: string | null;
+    tags: string[];
+    description: string;
+    waitTime: string;
+    nextAvailable: string;
+}
+
 const colorMap: Record<string, any> = {
     sky:    { badge: "bg-sky-100 text-sky-700", border: "border-sky-200", ring: "ring-sky-500", dot: "bg-sky-500" },
     purple: { badge: "bg-violet-100 text-violet-700", border: "border-violet-200", ring: "ring-violet-500", dot: "bg-violet-500" },
@@ -129,7 +157,7 @@ const colorMap: Record<string, any> = {
 };
 
 export default function HospitalProfilePage() {
-    const [selectedHospital, setSelectedHospital] = useState<any>(hospitals[0]);
+    const [selectedHospital, setSelectedHospital] = useState<Hospital>(hospitals[0]);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState("overview");
 
@@ -177,7 +205,7 @@ export default function HospitalProfilePage() {
                         { label: "Centres partenaires", value: "24+", icon: Building2, color: "text-sky-600", bg: "bg-white/70" },
                         { label: "Vaccins disponibles", value: "18", icon: Shield, color: "text-violet-600", bg: "bg-white/70" },
                         { label: "Enfants vaccinés", value: "12,400+", icon: Baby, color: "text-teal-600", bg: "bg-white/70" },
-                    ].map(stat => (
+                    ].map((stat: any) => (
                         <div key={stat.label} className={`${stat.bg} backdrop-blur-sm rounded-2xl px-5 py-3 flex items-center gap-3 shadow-sm border border-white/80`}>
                             <stat.icon className={stat.color} size={20} />
                             <div>
@@ -274,7 +302,7 @@ export default function HospitalProfilePage() {
                                         <p className="text-white/80 text-sm font-medium mt-1">{selectedHospital.specialty}</p>
                                         <div className="flex items-center gap-3 mt-2">
                                             <span className="bg-white/20 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">{selectedHospital.type}</span>
-                                            {selectedHospital.certifications.map(c => (
+                                            {selectedHospital.certifications.map((c: string) => (
                                                 <span key={c} className="bg-white/20 text-[10px] font-black px-3 py-1 rounded-full">{c}</span>
                                             ))}
                                         </div>
@@ -286,7 +314,7 @@ export default function HospitalProfilePage() {
                                         <p className="text-2xl font-black">{selectedHospital.rating}</p>
                                         <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">Note</p>
                                         <div className="flex justify-center gap-0.5 mt-1">
-                                            {[1,2,3,4,5].map(s => (
+                                            {[1,2,3,4,5].map((s: number) => (
                                                 <Star key={s} size={10} fill={s <= Math.round(selectedHospital.rating) ? "white" : "transparent"} className="text-white" />
                                             ))}
                                         </div>
@@ -309,7 +337,7 @@ export default function HospitalProfilePage() {
                                 { id: "overview", label: "Aperçu" },
                                 { id: "vaccines", label: "Vaccins" },
                                 { id: "contact", label: "Contact & RDV" }
-                            ].map(tab => (
+                            ].map((tab: any) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
@@ -344,7 +372,7 @@ export default function HospitalProfilePage() {
                                             { icon: Navigation, label: "Distance", value: selectedHospital.distance, color: "text-sky-600", bg: "bg-sky-50" },
                                             { icon: Activity, label: "Attente", value: selectedHospital.waitTime, color: "text-teal-600", bg: "bg-teal-50" },
                                             { icon: Calendar, label: "Prochain RDV", value: selectedHospital.nextAvailable, color: "text-violet-600", bg: "bg-violet-50" },
-                                        ].map(item => (
+                                        ].map((item: any) => (
                                             <div key={item.label} className={`${item.bg} rounded-2xl p-5 space-y-2`}>
                                                 <item.icon className={item.color} size={20} />
                                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{item.label}</p>
@@ -417,7 +445,7 @@ export default function HospitalProfilePage() {
                                             { icon: MapPin, label: "Adresse", value: selectedHospital.address, color: "text-sky-600", bg: "bg-sky-50" },
                                             { icon: Phone, label: "Téléphone", value: selectedHospital.phone, color: "text-teal-600", bg: "bg-teal-50" },
                                             ...(selectedHospital.website ? [{ icon: Globe, label: "Site Web", value: selectedHospital.website, color: "text-violet-600", bg: "bg-violet-50" }] : []),
-                                        ].map(item => (
+                                        ].map((item: any) => (
                                             <div key={item.label} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
                                                 <div className={`w-10 h-10 ${item.bg} rounded-xl flex items-center justify-center`}>
                                                     <item.icon className={item.color} size={18} />
