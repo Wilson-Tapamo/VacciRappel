@@ -25,7 +25,7 @@ export default function SupportPage() {
     const [messages, setMessages] = useState([
         {
             id: 1,
-            text: "Bonjour ! Je suis VacciCare AI, votre assistant santé intelligent.\n\nComment puis-je vous accompagner aujourd'hui ? 😊",
+            text: "Bonjour ! Je suis VacciRappel AI, votre assistant santé intelligent.\n\nComment puis-je vous accompagner aujourd'hui ? 😊",
             sender: 'bot',
             time: '10:00'
         },
@@ -90,7 +90,7 @@ export default function SupportPage() {
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                             <h1 className="text-2xl font-black text-slate-900">
-                                Assistant <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-violet-500">VacciCare</span>
+                                Assistant <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-violet-500">VacciRappel</span>
                             </h1>
                             <div className="flex items-center gap-1.5 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full border border-white shadow-sm">
                                 <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
