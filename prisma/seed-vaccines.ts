@@ -430,7 +430,7 @@ async function main() {
             sideEffectsCommon: v.sideEffectsCommon,
             sideEffectsRare: v.sideEffectsRare,
             didYouKnow: v.didYouKnow,
-            fullProtectionList: v.fullProtectionList || [],
+            fullProtectionList: (v as any).fullProtectionList || [],
         }
 
         if (existing) {
