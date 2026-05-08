@@ -9,6 +9,8 @@ import {
     Search, Navigation, X, Info
 } from "lucide-react";
 import Link from "next/link";
+import MobileHospitalTabs from "@/components/MobileHospitalTabs";
+import MapPage from "../map/page";
 
 const hospitals = [
     {
@@ -168,7 +170,7 @@ export default function HospitalProfilePage() {
 
     const c = colorMap[selectedHospital.color];
 
-    return (
+    const hospitalContent = (
         <div className="space-y-8 pb-10">
             {/* Hero Header */}
             <div className="relative rounded-[2.5rem] overflow-hidden p-8 md:p-12 gradient-hero border border-white/80 shadow-xl">
@@ -475,5 +477,19 @@ export default function HospitalProfilePage() {
                 </AnimatePresence>
             </div>
         </div>
+    );
+
+    return (
+        <>
+            <div className="block lg:hidden">
+                <MobileHospitalTabs 
+                    mapContent={<MapPage />}
+                    hospitalsContent={hospitalContent} 
+                />
+            </div>
+            <div className="hidden lg:block">
+                {hospitalContent}
+            </div>
+        </>
     );
 }

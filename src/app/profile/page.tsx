@@ -18,7 +18,8 @@ import {
     ShieldCheck,
     CheckCircle2,
     Clock,
-    Activity
+    Activity,
+    ScanLine
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -228,6 +229,11 @@ export default function ProfilePage() {
                             <Edit2 size={18} className="text-sky-500" />
                             Modifier les informations
                         </button>
+
+                        <Link href="/scan" className="w-full py-6 px-8 rounded-[2.5rem] bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 shadow-xl shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-1 active:translate-y-0 transition-all group">
+                            <ScanLine size={18} className="animate-pulse" />
+                            Scanner le carnet de santé
+                        </Link>
                     </div>
 
                     {/* RIGHT PANEL: Stats & Badges */}
@@ -386,6 +392,15 @@ export default function ProfilePage() {
                     </div>
                 </motion.div>
             </AnimatePresence>
+
+            {/* Mobile Floating Scan Button */}
+            <div className="fixed bottom-24 right-6 lg:hidden z-50">
+                <Link href="/scan" className="relative flex items-center justify-center w-16 h-16 bg-gradient-to-r from-sky-500 to-blue-600 rounded-[2rem] text-white shadow-2xl shadow-sky-500/40 border-4 border-white hover:scale-105 active:scale-95 transition-transform">
+                    <ScanLine size={24} />
+                    <span className="absolute -top-2 -right-2 w-4 h-4 bg-rose-500 rounded-full animate-ping opacity-75" />
+                    <span className="absolute -top-2 -right-2 w-4 h-4 bg-rose-500 rounded-full border-2 border-white" />
+                </Link>
+            </div>
 
             {/* Modals */}
             <ChildVaccinationModal

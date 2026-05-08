@@ -9,16 +9,17 @@ import {
     User,
     HeartPulse,
     Building2,
-    ShieldCheck
+    ShieldCheck,
+    Calendar
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const navItems = [
     { name: "Accueil", href: "/", icon: Home },
-    { name: "Hôpitaux", href: "/hospitals", icon: Building2 },
+    { name: "Calendrier", href: "/calendar", icon: Calendar },
     { name: "Support", href: "/support", icon: HeartPulse, isPrimary: true },
-    { name: "Bibliothèque", href: "/vaccine-library", icon: ShieldCheck },
+    { name: "Hôpitaux", href: "/hospitals", icon: Building2 },
     { name: "Profil", href: "/profile", icon: User },
 ];
 

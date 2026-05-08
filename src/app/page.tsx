@@ -228,6 +228,30 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Calendar Link Banner */}
+      <div className="w-full relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-rose-400 via-pink-500 to-amber-500 p-8 md:p-10 shadow-2xl shadow-rose-500/20 group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-white/30 transition-colors" />
+          <div className="absolute bottom-0 left-10 w-32 h-32 bg-amber-300/30 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-6">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border-2 border-white/50 shadow-xl shrink-0">
+                      <CalendarIcon size={32} />
+                  </div>
+                  <div>
+                      <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">Le Calendrier <span className="text-amber-200">Magique</span></h2>
+                      <p className="text-white/90 font-medium text-sm md:text-base mt-2 max-w-md">
+                          Découvrez la frise chronologique joyeuse des vaccins de vos enfants. Suivez leur protection de façon ludique !
+                      </p>
+                  </div>
+              </div>
+              <Link href="/calendar" className="w-full md:w-auto px-8 py-5 bg-white text-rose-500 hover:text-rose-600 hover:bg-slate-50 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl shrink-0 border-2 border-transparent hover:border-rose-100">
+                  Explorer
+                  <ArrowRight size={18} />
+              </Link>
+          </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Main Timeline Card */}
         <div className="lg:col-span-2 space-y-10">
