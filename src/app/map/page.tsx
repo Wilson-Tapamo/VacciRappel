@@ -7,6 +7,9 @@ import {
     ChevronRight, Filter, Maximize2, Building2, Shield,
     Stethoscope, Heart, Baby, CheckCircle, Activity, X
 } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const MapComponent = dynamic(() => import("@/components/MapComponent"), { ssr: false });
 
 const hospitals = [
     {
@@ -165,7 +168,6 @@ export default function MapPage() {
                         </button>
                     </div>
 
-                    {/* Filter pills on map */}
                     <div className="absolute top-24 left-5 flex gap-2 z-20">
                         {filters.map(f => (
                             <button
@@ -181,48 +183,13 @@ export default function MapPage() {
                         ))}
                     </div>
 
-                    {/* Map Pins */}
-                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                        {/* User location pin */}
-                        <motion.div
-                            className="absolute"
-                            style={{ top: '55%', left: '48%' }}
-                        >
-                            <div className="relative">
-                                <div className="w-5 h-5 bg-blue-600 rounded-full border-3 border-white shadow-xl" />
-                                <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-40 scale-150" />
-                            </div>
-                        </motion.div>
-
-                        {/* Hospital pins */}
-                        {hospitals.map((h, i) => {
-                            const positions = [
-                                { top: '35%', left: '35%' },
-                                { top: '60%', left: '62%' },
-                                { top: '25%', left: '60%' },
-                            ];
-                            return (
-                                <motion.button
-                                    key={h.id}
-                                    animate={{ y: [0, -8, 0] }}
-                                    transition={{ repeat: Infinity, duration: 2.5 + i * 0.4, ease: "easeInOut" }}
-                                    className="absolute z-10 group/pin"
-                                    style={positions[i]}
-                                    onClick={() => setSelectedHospital(selectedHospital?.id === h.id ? null : h)}
-                                >
-                                    <div className={`w-12 h-12 bg-gradient-to-br ${h.gradient} rounded-2xl shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform border-2 border-white`}>
-                                        <MapPin size={20} />
-                                    </div>
-                                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-black/20 rounded-full blur-[3px]" />
-
-                                    {/* Tooltip */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-white rounded-2xl shadow-2xl px-4 py-3 whitespace-nowrap opacity-0 group-hover/pin:opacity-100 transition-all pointer-events-none border border-slate-50">
-                                        <p className="text-xs font-black text-slate-800">{h.name}</p>
-                                        <p className="text-[10px] text-slate-500 mt-0.5">{h.distance} · ⭐ {h.rating}</p>
-                                    </div>
-                                </motion.button>
-                            );
-                        })}
+                    {/* Interactive Leaflet Map */}
+                    <div className="absolute inset-0 z-0">
+                        <MapComponent 
+                            hospitals={hospitals} 
+                            selectedHospital={selectedHospital} 
+                            onSelectHospital={setSelectedHospital} 
+                        />
                     </div>
 
                     {/* Selected hospital popup */}
