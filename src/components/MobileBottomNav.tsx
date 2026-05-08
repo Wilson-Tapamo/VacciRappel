@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
     { name: "Accueil", href: "/", icon: Home },
-    { name: "Calendrier", href: "/calendar", icon: Calendar },
+    { name: "Vaccins", href: "/vaccine-library", icon: ShieldCheck },
     { name: "Support", href: "/support", icon: HeartPulse, isPrimary: true },
     { name: "Hôpitaux", href: "/hospitals", icon: Building2 },
     { name: "Profil", href: "/profile", icon: User },
