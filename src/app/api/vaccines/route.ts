@@ -7,7 +7,8 @@ export async function GET() {
     try {
         const vaccines = await prisma.vaccine.findMany();
         return NextResponse.json(vaccines);
-    } catch (error) {
-        return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
+    } catch (error: any) {
+        console.error("API /api/vaccines error:", error);
+        return NextResponse.json({ message: "Erreur serveur", error: error.message }, { status: 500 });
     }
 }

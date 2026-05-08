@@ -32,15 +32,25 @@ export default function VaccineLibraryPage() {
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [selectedVaccine, setSelectedVaccine] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     useEffect(() => {
         fetch("/api/vaccines")
-            .then(res => res.json())
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || data.message || "Erreur lors du chargement");
+                return data;
+            })
             .then(data => {
                 if (Array.isArray(data)) setVaccines(data);
+                else throw new Error("Format de données invalide");
                 setLoading(false);
             })
-            .catch(() => setLoading(false));
+            .catch((err) => {
+                console.error("Fetch vaccines error:", err);
+                setErrorMsg(err.message);
+                setLoading(false);
+            });
     }, []);
 
     const filtered = vaccines.filter(v => {
@@ -150,6 +160,16 @@ export default function VaccineLibraryPage() {
                         <Syringe className="text-white" size={36} />
                     </div>
                     <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Chargement de la bibliothèque...</p>
+                </div>
+            ) : errorMsg ? (
+                <div className="flex flex-col items-center justify-center py-32 gap-6 text-center">
+                    <div className="w-24 h-24 bg-rose-100 rounded-3xl flex items-center justify-center">
+                        <AlertCircle className="text-rose-500" size={44} />
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-black text-slate-800">Erreur de Chargement</h3>
+                        <p className="text-slate-500 max-w-xs mx-auto text-sm">{errorMsg}</p>
+                    </div>
                 </div>
             ) : filtered.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
