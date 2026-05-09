@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const session = await getServerSession(authOptions);
 
@@ -15,7 +15,7 @@ export async function PATCH(
 
     try {
         const { name, birthDate, gender, image, medicalInfo } = await req.json();
-        const childId = params.id;
+        const { id: childId } = await params;
 
         // Verify child belongs to user
         const existingChild = await prisma.child.findFirst({
