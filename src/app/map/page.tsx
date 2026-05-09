@@ -63,6 +63,23 @@ const hospitals = [
         badge: "bg-teal-100 text-teal-700",
         pinColor: "bg-teal-500",
         waitTime: "~40 min"
+    },
+    {
+        id: 4,
+        name: "Hôpital Central de Yaoundé",
+        type: "Public",
+        distance: "3.2 km",
+        rating: 4.6,
+        reviews: 210,
+        open: "Ouvert 24h/24",
+        openStatus: true,
+        address: "Centre Ville, Yaoundé",
+        phone: "+237 222 23 40 20",
+        tags: ["Vaccination", "Chirurgie", "Traumatologie"],
+        gradient: "from-rose-400 to-red-500",
+        badge: "bg-rose-100 text-rose-700",
+        pinColor: "bg-rose-500",
+        waitTime: "~50 min"
     }
 ];
 
