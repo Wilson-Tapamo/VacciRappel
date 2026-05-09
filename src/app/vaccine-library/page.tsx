@@ -11,9 +11,11 @@ import VaccineDetailModal from "@/components/vaccines/VaccineDetailModal";
 
 const categories = [
     { id: "all", label: "Tous", color: "bg-slate-100 text-slate-700", activeColor: "bg-slate-800 text-white" },
-    { id: "Obligatoire", label: "Obligatoire", color: "bg-red-50 text-rose-700", activeColor: "bg-rose-500 text-white" },
-    { id: "Recommandé", label: "Recommandé", color: "bg-sky-50 text-sky-700", activeColor: "bg-sky-500 text-white" },
-    { id: "Optionnel", label: "Optionnel", color: "bg-teal-50 text-teal-700", activeColor: "bg-teal-500 text-white" },
+    { id: "Fondamental", label: "Fondamental", color: "bg-indigo-50 text-indigo-700", activeColor: "bg-indigo-500 text-white" },
+    { id: "Indispensable", label: "Indispensable", color: "bg-sky-50 text-sky-700", activeColor: "bg-sky-500 text-white" },
+    { id: "Critique", label: "Critique", color: "bg-amber-50 text-amber-700", activeColor: "bg-amber-500 text-white" },
+    { id: "Obligatoire", label: "Obligatoire", color: "bg-rose-50 text-rose-700", activeColor: "bg-rose-500 text-white" },
+    { id: "Important", label: "Important", color: "bg-teal-50 text-teal-700", activeColor: "bg-teal-500 text-white" },
 ];
 
 const vaccineColors = [
@@ -35,7 +37,7 @@ export default function VaccineLibraryPage() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch("/api/vaccines")
+        fetch("/api/vaccines?t=" + new Date().getTime(), { cache: 'no-store' })
             .then(async res => {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || data.message || "Erreur lors du chargement");
