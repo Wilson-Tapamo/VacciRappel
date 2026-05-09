@@ -304,15 +304,29 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        {child.medicalInfo && (
-                          <div className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100/50">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Stethoscope size={12} className="text-rose-500" />
-                              <span className="text-[9px] font-black uppercase text-rose-600 tracking-wider">Note Médicale</span>
+                        {(child.medicalInfo || child.bloodGroup || child.allergies) && (
+                          <div className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100/50 space-y-2">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Stethoscope size={12} className="text-rose-500" />
+                                    <span className="text-[9px] font-black uppercase text-rose-600 tracking-wider">Santé</span>
+                                </div>
+                                {child.bloodGroup && (
+                                    <span className="px-2 py-0.5 bg-rose-500 text-white text-[8px] font-black rounded-md">
+                                        {child.bloodGroup}
+                                    </span>
+                                )}
                             </div>
-                            <p className="text-[11px] text-slate-600 font-medium line-clamp-2 italic">
-                              "{child.medicalInfo}"
-                            </p>
+                            {child.allergies && (
+                                <p className="text-[10px] text-rose-700 font-bold">
+                                    ⚠️ {child.allergies}
+                                </p>
+                            )}
+                            {child.medicalInfo && (
+                                <p className="text-[10px] text-slate-600 font-medium line-clamp-1 italic">
+                                    "{child.medicalInfo}"
+                                </p>
+                            )}
                           </div>
                         )}
 
