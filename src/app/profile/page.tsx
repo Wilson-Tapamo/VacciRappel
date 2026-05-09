@@ -511,16 +511,16 @@ export default function ProfilePage() {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden"
+                            className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                         >
-                            <div className="p-8 space-y-8">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-2xl font-black text-slate-900">Modifier le profil</h2>
-                                    <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                                        <X size={24} className="text-slate-400" />
-                                    </button>
-                                </div>
+                            <div className="p-6 md:p-8 flex items-center justify-between border-b border-slate-50 shrink-0">
+                                <h2 className="text-xl md:text-2xl font-black text-slate-900">Modifier le profil</h2>
+                                <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                                    <X size={24} className="text-slate-400" />
+                                </button>
+                            </div>
 
+                            <div className="p-6 md:p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
                                 <div className="space-y-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Nom de l'enfant</label>
@@ -604,27 +604,27 @@ export default function ProfilePage() {
                                         />
                                     </div>
                                 </div>
+                            </div>
 
-                                <div className="flex gap-4">
-                                    <button
-                                        onClick={() => setIsEditModalOpen(false)}
-                                        className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
-                                    >
-                                        Annuler
-                                    </button>
-                                    <button
-                                        onClick={handleUpdateChild}
-                                        disabled={isSaving}
-                                        className="flex-1 py-4 gradient-primary text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-sky-200 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all"
-                                    >
-                                        {isSaving ? "Enregistrement..." : (
-                                            <>
-                                                <Save size={18} />
-                                                Enregistrer
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
+                            <div className="p-6 md:p-8 flex gap-4 border-t border-slate-50 shrink-0">
+                                <button
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={handleUpdateChild}
+                                    disabled={isSaving}
+                                    className="flex-1 py-4 gradient-primary text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-sky-200 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all"
+                                >
+                                    {isSaving ? "Enregistrement..." : (
+                                        <>
+                                            <Save size={18} />
+                                            Enregistrer
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </motion.div>
                     </div>
@@ -645,16 +645,16 @@ export default function ProfilePage() {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-sm bg-white rounded-[3rem] shadow-2xl overflow-hidden"
+                            className="relative w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                         >
-                            <div className="p-8 space-y-8">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-2xl font-black text-slate-900">Nouvelle Mesure</h2>
-                                    <button onClick={() => setIsGrowthModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                                        <X size={24} className="text-slate-400" />
-                                    </button>
-                                </div>
+                            <div className="p-6 md:p-8 flex items-center justify-between border-b border-slate-50 shrink-0">
+                                <h2 className="text-xl md:text-2xl font-black text-slate-900">Nouvelle Mesure</h2>
+                                <button onClick={() => setIsGrowthModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                                    <X size={24} className="text-slate-400" />
+                                </button>
+                            </div>
 
+                            <div className="p-6 md:p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
@@ -688,7 +688,9 @@ export default function ProfilePage() {
                                         />
                                     </div>
                                 </div>
+                            </div>
 
+                            <div className="p-6 md:p-8 border-t border-slate-50 shrink-0">
                                 <button
                                     onClick={handleAddGrowth}
                                     disabled={isSaving || !growthData.weight || !growthData.height}
