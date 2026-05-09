@@ -44,9 +44,18 @@ export default function ProfilePage() {
         name: "",
         image: "",
         medicalInfo: "",
-        birthDate: ""
+        birthDate: "",
+        bloodGroup: "",
+        allergies: "",
+        conditions: ""
     });
     const [isSaving, setIsSaving] = useState(false);
+    const [isGrowthModalOpen, setIsGrowthModalOpen] = useState(false);
+    const [growthData, setGrowthData] = useState({
+        weight: "",
+        height: "",
+        date: new Date().toISOString().split('T')[0]
+    });
 
     const fetchChildren = () => {
         fetch("/api/children")
@@ -107,13 +116,41 @@ export default function ProfilePage() {
         }
     };
 
+    const handleAddGrowth = async () => {
+        if (!activeProfile) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch(`/api/children/${activeProfile.id}/growth`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(growthData),
+            });
+            if (res.ok) {
+                fetchChildren();
+                setIsGrowthModalOpen(false);
+                setGrowthData({
+                    weight: "",
+                    height: "",
+                    date: new Date().toISOString().split('T')[0]
+                });
+            }
+        } catch (error) {
+            console.error("Failed to add growth record", error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const openEditModal = () => {
         if (!activeProfile) return;
         setEditData({
             name: activeProfile.name,
             image: activeProfile.image || "",
             medicalInfo: activeProfile.medicalInfo || "",
-            birthDate: new Date(activeProfile.birthDate).toISOString().split('T')[0]
+            birthDate: new Date(activeProfile.birthDate).toISOString().split('T')[0],
+            bloodGroup: activeProfile.bloodGroup || "",
+            allergies: activeProfile.allergies || "",
+            conditions: activeProfile.conditions || ""
         });
         setIsEditModalOpen(true);
     };
@@ -333,124 +370,119 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        <div className="glass-card p-10 border-white/80 bg-white/40 backdrop-blur-xl shadow-2xl shadow-sky-900/5 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-8 opacity-5">
-                                <Stethoscope size={100} />
-                            </div>
-                            <div className="space-y-6 relative z-10">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                                        <Stethoscope className="text-rose-500" size={32} />
-                                        Notes Médicales
-                                    </h3>
-                                    <button 
-                                        onClick={openEditModal}
-                                        className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-sky-500 transition-colors"
-                                    >
-                                        <Edit2 size={18} />
-                                    </button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="glass-card p-10 border-white/80 bg-white/40 backdrop-blur-xl shadow-2xl shadow-sky-900/5 relative overflow-hidden group col-span-1 md:col-span-2">
+                                <div className="absolute top-0 right-0 p-8 opacity-5">
+                                    <Stethoscope size={100} />
                                 </div>
-                                {activeProfile.medicalInfo ? (
-                                    <div className="bg-white/60 rounded-3xl p-6 border border-white/80">
-                                        <p className="text-slate-600 font-medium leading-relaxed whitespace-pre-wrap">
-                                            {activeProfile.medicalInfo}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="bg-slate-50/50 rounded-3xl p-10 text-center border-2 border-dashed border-slate-200">
-                                        <p className="text-slate-400 font-bold text-sm">Aucune information médicale saisie.</p>
+                                <div className="space-y-8 relative z-10">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                                            <Stethoscope className="text-rose-500" size={32} />
+                                            Dossier Médical
+                                        </h3>
                                         <button 
                                             onClick={openEditModal}
-                                            className="mt-4 text-sky-500 font-black uppercase tracking-widest text-[10px] hover:underline"
+                                            className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-sky-500 transition-colors"
                                         >
-                                            Ajouter maintenant
+                                            <Edit2 size={18} />
                                         </button>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                                    <Trophy className="text-amber-500" size={32} />
-                                    Hauts Faits
-                                </h3>
-                                <div className="flex gap-2">
-                                    <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase rounded-lg border border-amber-100">
-                                        {(activeProfile.badges || []).length} Débloqués
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                                {(activeProfile.badges || []).map((b: any, i: number) => (
-                                    <motion.div
-                                        key={i}
-                                        whileHover={{ y: -5, scale: 1.05 }}
-                                        className="p-8 glass-card bg-white border-white/80 text-center shadow-xl shadow-sky-900/5 group"
-                                    >
-                                        <div className="relative w-20 h-20 mx-auto mb-6">
-                                            <div className="absolute inset-0 bg-sky-100 rounded-[2rem] rotate-6 group-hover:rotate-12 transition-transform opacity-30" />
-                                            <div className="absolute inset-0 bg-sky-50 rounded-[2rem] flex items-center justify-center text-sky-500 shadow-inner group-hover:bg-sky-100 transition-colors">
-                                                <Trophy size={40} strokeWidth={1.5} />
-                                            </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="bg-white/60 rounded-3xl p-6 border border-white/80 shadow-sm">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Allergies</p>
+                                            <p className={cn("text-sm font-bold", activeProfile.allergies ? "text-rose-600" : "text-slate-400")}>
+                                                {activeProfile.allergies || "Aucune allergie connue"}
+                                            </p>
                                         </div>
-                                        <p className="text-sm font-black text-slate-800 leading-tight">{b.name}</p>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Explorateur</p>
-                                    </motion.div>
-                                ))}
-                                
-                                <button className="p-8 glass bg-white/30 border-dashed border-4 border-slate-200 flex flex-col items-center justify-center gap-3 opacity-60 hover:opacity-100 hover:border-sky-300 hover:bg-sky-50/50 transition-all rounded-[2.5rem] group">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-sky-500 group-hover:bg-white transition-all shadow-sm">
-                                        <Plus size={24} />
+                                        <div className="bg-white/60 rounded-3xl p-6 border border-white/80 shadow-sm">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Conditions</p>
+                                            <p className={cn("text-sm font-bold", activeProfile.conditions ? "text-amber-600" : "text-slate-400")}>
+                                                {activeProfile.conditions || "Aucune condition chronique"}
+                                            </p>
+                                        </div>
+                                        <div className="bg-white/60 rounded-3xl p-6 border border-white/80 shadow-sm">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Notes spéciales</p>
+                                            <p className="text-sm font-medium text-slate-600 line-clamp-3">
+                                                {activeProfile.medicalInfo || "Pas de notes supplémentaires"}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nouveau</span>
-                                </button>
+                                </div>
                             </div>
                         </div>
 
                         <div className="glass-card p-10 border-white/80 bg-white/40 backdrop-blur-xl shadow-2xl shadow-sky-900/5 relative overflow-hidden group">
                             <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-sky-500 via-violet-500 to-amber-500" />
                             
-                            <div className="flex items-center justify-between mb-12">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
                                 <div className="space-y-1">
                                     <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                                         <Activity className="text-violet-500" size={32} />
                                         Suivi de Croissance
                                     </h3>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-10">Évolution de la taille (cm)</p>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-10">Évolution de la taille (cm) et du poids (kg)</p>
                                 </div>
-                                <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
-                                    <Ruler size={16} className="text-slate-400" />
-                                    <span className="text-sm font-black text-slate-700">Taille</span>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <Ruler size={16} className="text-sky-500" />
+                                        <span className="text-sm font-black text-slate-700">Taille</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => setIsGrowthModalOpen(true)}
+                                        className="p-3 bg-sky-50 text-sky-500 rounded-xl hover:bg-sky-500 hover:text-white transition-all shadow-sm active:scale-95"
+                                    >
+                                        <Plus size={20} />
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="h-64 flex items-end justify-between gap-6 px-4 relative">
-                                {(activeProfile.growth || [45, 60, 55, 75, 85, 80]).map((h: number, i: number) => (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-4 group/bar">
-                                        <div className="relative w-full flex items-end justify-center h-full">
-                                            <motion.div
-                                                initial={{ height: 0 }}
-                                                animate={{ height: `${h}%` }}
-                                                transition={{ duration: 1.5, delay: i * 0.1, ease: "circOut" }}
-                                                className="w-full max-w-[45px] bg-gradient-to-b from-sky-400 to-sky-600 rounded-2xl shadow-lg relative cursor-help group-hover/bar:from-sky-500 group-hover/bar:to-sky-700"
-                                            >
-                                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-all duration-300 scale-90 group-hover/bar:scale-100 pointer-events-none">
-                                                    <div className="bg-slate-900 text-white text-[11px] px-3 py-2 rounded-2xl font-black shadow-2xl flex items-center gap-1.5 min-w-max">
-                                                        {h} cm <span className="text-sky-400">↑</span>
-                                                    </div>
+                            {activeProfile.growthRecords && activeProfile.growthRecords.length > 0 ? (
+                                <div className="h-64 flex items-end justify-between gap-6 px-4 relative mt-10">
+                                    {activeProfile.growthRecords.slice(-6).map((record: any, i: number) => {
+                                        const h = record.height || 0;
+                                        // Simple normalization for height (assuming 100cm is max for display)
+                                        const heightPercent = Math.min((h / 100) * 100, 100);
+                                        return (
+                                            <div key={record.id} className="flex-1 flex flex-col items-center gap-4 group/bar">
+                                                <div className="relative w-full flex items-end justify-center h-full">
+                                                    <motion.div
+                                                        initial={{ height: 0 }}
+                                                        animate={{ height: `${heightPercent}%` }}
+                                                        transition={{ duration: 1.5, delay: i * 0.1, ease: "circOut" }}
+                                                        className="w-full max-w-[45px] bg-gradient-to-b from-sky-400 to-sky-600 rounded-2xl shadow-lg relative cursor-help group-hover/bar:from-sky-500 group-hover/bar:to-sky-700"
+                                                    >
+                                                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-all duration-300 scale-90 group-hover/bar:scale-100 pointer-events-none">
+                                                            <div className="bg-slate-900 text-white text-[11px] px-3 py-2 rounded-2xl font-black shadow-2xl flex flex-col items-center gap-1 min-w-max">
+                                                                <span>{record.height} cm 📏</span>
+                                                                <span>{record.weight} kg ⚖️</span>
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
                                                 </div>
-                                            </motion.div>
-                                        </div>
-                                        <span className="text-[10px] font-black text-slate-400 uppercase">Mois {i + 1}</span>
-                                    </div>
-                                ))}
-                                {[0, 33, 66, 100].map(line => (
-                                    <div key={line} className="absolute inset-x-0 border-t border-slate-100 pointer-events-none" style={{ bottom: `${line}%` }} />
-                                ))}
-                            </div>
+                                                <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                    {new Date(record.date).toLocaleDateString('fr-FR', { month: 'short' })}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                    {[0, 33, 66, 100].map(line => (
+                                        <div key={line} className="absolute inset-x-0 border-t border-slate-100 pointer-events-none" style={{ bottom: `${line}%` }} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="h-64 flex flex-col items-center justify-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 mt-10">
+                                    <Activity className="text-slate-300 mb-4" size={48} />
+                                    <p className="text-slate-400 font-bold text-sm">Aucune donnée de croissance enregistrée.</p>
+                                    <button 
+                                        onClick={() => setIsGrowthModalOpen(true)}
+                                        className="mt-4 text-sky-500 font-black uppercase tracking-widest text-[10px] hover:underline"
+                                    >
+                                        Ajouter la première mesure
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </motion.div>
@@ -491,20 +523,57 @@ export default function ProfilePage() {
                                         />
                                     </div>
 
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Naissance</label>
+                                            <input
+                                                type="date"
+                                                className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700"
+                                                value={editData.birthDate}
+                                                onChange={(e) => setEditData({ ...editData, birthDate: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Groupe Sanguin</label>
+                                            <select
+                                                className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700 appearance-none"
+                                                value={editData.bloodGroup}
+                                                onChange={(e) => setEditData({ ...editData, bloodGroup: e.target.value })}
+                                            >
+                                                <option value="">Sélectionner</option>
+                                                {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(g => (
+                                                    <option key={g} value={g}>{g}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Date de naissance</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Allergies</label>
                                         <input
-                                            type="date"
+                                            type="text"
+                                            placeholder="Ex: Pénicilline..."
                                             className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700"
-                                            value={editData.birthDate}
-                                            onChange={(e) => setEditData({ ...editData, birthDate: e.target.value })}
+                                            value={editData.allergies}
+                                            onChange={(e) => setEditData({ ...editData, allergies: e.target.value })}
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Infos Médicales</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Conditions Chroniques</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: Asthme..."
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700"
+                                            value={editData.conditions}
+                                            onChange={(e) => setEditData({ ...editData, conditions: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Notes Spéciales</label>
                                         <textarea
-                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-medium text-slate-700 min-h-[120px] resize-none"
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-medium text-slate-700 min-h-[100px] resize-none"
                                             value={editData.medicalInfo}
                                             onChange={(e) => setEditData({ ...editData, medicalInfo: e.target.value })}
                                         />
@@ -531,6 +600,77 @@ export default function ProfilePage() {
                                         )}
                                     </button>
                                 </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {isGrowthModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsGrowthModalOpen(false)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-sm bg-white rounded-[3rem] shadow-2xl overflow-hidden"
+                        >
+                            <div className="p-8 space-y-8">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-2xl font-black text-slate-900">Nouvelle Mesure</h2>
+                                    <button onClick={() => setIsGrowthModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                                        <X size={24} className="text-slate-400" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Poids (kg)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700"
+                                                value={growthData.weight}
+                                                onChange={(e) => setGrowthData({ ...growthData, weight: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Taille (cm)</label>
+                                            <input
+                                                type="number"
+                                                step="0.5"
+                                                className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700"
+                                                value={growthData.height}
+                                                onChange={(e) => setGrowthData({ ...growthData, height: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Date de la mesure</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700"
+                                            value={growthData.date}
+                                            onChange={(e) => setGrowthData({ ...growthData, date: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleAddGrowth}
+                                    disabled={isSaving || !growthData.weight || !growthData.height}
+                                    className="w-full py-5 gradient-primary text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-sky-200 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {isSaving ? "Enregistrement..." : "Ajouter la mesure"}
+                                </button>
                             </div>
                         </motion.div>
                     </div>

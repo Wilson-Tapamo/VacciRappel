@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function PATCH(
+export async function POST(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -14,7 +14,7 @@ export async function PATCH(
     }
 
     try {
-        const { name, birthDate, gender, image, medicalInfo, bloodGroup, allergies, conditions } = await req.json();
+        const { weight, height, date } = await req.json();
         const { id: childId } = await params;
 
         // Verify child belongs to user
@@ -29,23 +29,18 @@ export async function PATCH(
             return NextResponse.json({ message: "Enfant non trouvé" }, { status: 404 });
         }
 
-        const updatedChild = await prisma.child.update({
-            where: { id: childId },
+        const growthRecord = await prisma.growthRecord.create({
             data: {
-                name,
-                birthDate: birthDate ? new Date(birthDate) : undefined,
-                gender,
-                image,
-                bloodGroup,
-                allergies,
-                conditions,
-                medicalInfo,
+                childId,
+                weight: weight ? parseFloat(weight) : null,
+                height: height ? parseFloat(height) : null,
+                date: date ? new Date(date) : new Date(),
             },
         });
 
-        return NextResponse.json(updatedChild);
+        return NextResponse.json(growthRecord, { status: 201 });
     } catch (error) {
-        console.error("Failed to update child", error);
+        console.error("Failed to add growth record", error);
         return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
     }
 }

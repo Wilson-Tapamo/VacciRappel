@@ -16,6 +16,9 @@ export async function GET() {
             include: {
                 vaccinations: {
                     include: { vaccine: true }
+                },
+                growthRecords: {
+                    orderBy: { date: 'asc' }
                 }
             }
         });
@@ -34,7 +37,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { name, birthDate, gender, image, medicalInfo, medicalBookletScan } = await req.json();
+        const { name, birthDate, gender, image, medicalInfo, medicalBookletScan, bloodGroup, allergies, conditions } = await req.json();
 
         const child = await prisma.child.create({
             data: {
@@ -42,6 +45,9 @@ export async function POST(req: Request) {
                 birthDate: new Date(birthDate),
                 gender,
                 image,
+                bloodGroup,
+                allergies,
+                conditions,
                 medicalInfo,
                 medicalBookletScan,
                 userId: (session.user as any).id,

@@ -33,6 +33,9 @@ export default function AddChildPage() {
         birthDate: "",
         gender: "M",
         image: "",
+        bloodGroup: "",
+        allergies: "",
+        conditions: "",
         medicalInfo: "",
         medicalBookletScan: ""
     });
@@ -211,28 +214,57 @@ export default function AddChildPage() {
                         {currentStep === 2 && (
                             <div className="space-y-8">
                                 <div className="space-y-2">
-                                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Infos médicales 🩺</h1>
-                                    <p className="text-slate-500 font-medium">Saisissez les antécédents, allergies ou informations importantes.</p>
+                                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Dossier Médical 🩺</h1>
+                                    <p className="text-slate-500 font-medium text-sm">Ces informations sont essentielles pour la sécurité de votre enfant.</p>
                                 </div>
 
                                 <div className="space-y-6">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Groupe Sanguin</label>
+                                        <div className="grid grid-cols-4 gap-3">
+                                            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((group) => (
+                                                <button
+                                                    key={group}
+                                                    onClick={() => setFormData({ ...formData, bloodGroup: group })}
+                                                    className={`py-3 rounded-2xl border-2 transition-all font-black text-xs ${formData.bloodGroup === group ? "border-sky-500 bg-sky-50 text-sky-600" : "border-slate-50 bg-white text-slate-400"
+                                                        }`}
+                                                >
+                                                    {group}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Observations médicales</label>
-                                        <textarea
-                                            placeholder="Ex: Allergie à la pénicilline, Asthme léger, Groupe sanguin O+..."
-                                            className="w-full px-8 py-6 bg-white border-2 border-slate-50 rounded-[2.5rem] focus:border-sky-500 outline-none transition-all shadow-sm focus:shadow-xl focus:shadow-sky-100 font-medium text-slate-700 min-h-[150px] resize-none"
-                                            value={formData.medicalInfo}
-                                            onChange={(e) => setFormData({ ...formData, medicalInfo: e.target.value })}
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Allergies connues</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: Pénicilline, Arachides..."
+                                            className="w-full px-6 py-4 bg-white border-2 border-slate-50 rounded-2xl focus:border-sky-500 outline-none transition-all font-bold text-slate-700"
+                                            value={formData.allergies}
+                                            onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
                                         />
                                     </div>
 
-                                    <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex gap-4">
-                                        <div className="w-10 h-10 bg-amber-200/50 rounded-xl flex items-center justify-center text-amber-700 shrink-0">
-                                            <Stethoscope size={20} />
-                                        </div>
-                                        <p className="text-xs text-amber-800 font-medium leading-relaxed">
-                                            Ces informations aideront le personnel soignant lors des futurs rendez-vous de vaccination.
-                                        </p>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Maladies chroniques</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: Asthme, Diabète..."
+                                            className="w-full px-6 py-4 bg-white border-2 border-slate-50 rounded-2xl focus:border-sky-500 outline-none transition-all font-bold text-slate-700"
+                                            value={formData.conditions}
+                                            onChange={(e) => setFormData({ ...formData, conditions: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Notes Spéciales</label>
+                                        <textarea
+                                            placeholder="Autres informations importantes..."
+                                            className="w-full px-6 py-4 bg-white border-2 border-slate-50 rounded-2xl focus:border-sky-500 outline-none transition-all font-medium text-slate-700 min-h-[100px] resize-none"
+                                            value={formData.medicalInfo}
+                                            onChange={(e) => setFormData({ ...formData, medicalInfo: e.target.value })}
+                                        />
                                     </div>
                                 </div>
                             </div>
