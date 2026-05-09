@@ -16,7 +16,8 @@ import {
   TrendingUp,
   Sparkles,
   Zap,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Stethoscope
 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import VaccinationTimeline from "@/components/dashboard/VaccinationTimeline";
