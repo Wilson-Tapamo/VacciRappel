@@ -171,10 +171,25 @@ export default function AddChildPage() {
                                 </div>
 
                                 <div className="flex flex-col items-center">
-                                    <button className="relative group">
-                                        <div className="w-48 h-48 rounded-[4rem] bg-sky-50 border-4 border-white shadow-2xl flex items-center justify-center text-sky-500 transition-transform group-hover:scale-110 duration-500">
+                                    <label className="relative group cursor-pointer">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onloadend = () => {
+                                                        setFormData({ ...formData, image: reader.result as string });
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                        />
+                                        <div className="w-48 h-48 rounded-[4rem] bg-sky-50 border-4 border-white shadow-2xl flex items-center justify-center text-sky-500 transition-transform group-hover:scale-110 duration-500 overflow-hidden">
                                             {formData.image ? (
-                                                <img src={formData.image} className="w-full h-full object-cover rounded-[3.8rem]" />
+                                                <img src={formData.image} className="w-full h-full object-cover" />
                                             ) : (
                                                 <Plus size={48} />
                                             )}
@@ -182,7 +197,7 @@ export default function AddChildPage() {
                                         <div className="absolute -bottom-2 -right-2 w-14 h-14 gradient-primary text-white rounded-2xl flex items-center justify-center border-4 border-white shadow-xl">
                                             <Camera size={24} />
                                         </div>
-                                    </button>
+                                    </label>
                                     <button
                                         onClick={nextStep}
                                         className="mt-10 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-slate-600 transition-colors"
@@ -197,40 +212,28 @@ export default function AddChildPage() {
                             <div className="space-y-8">
                                 <div className="space-y-2">
                                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Infos médicales 🩺</h1>
-                                    <p className="text-slate-500 font-medium">Vous pouvez scanner le carnet ou saisir les données manuellement.</p>
+                                    <p className="text-slate-500 font-medium">Saisissez les antécédents, allergies ou informations importantes.</p>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <button className="w-full p-6 bg-white border-2 border-slate-50 rounded-[2.5rem] flex items-center gap-6 hover:border-sky-500 hover:shadow-xl transition-all group">
-                                        <div className="w-16 h-16 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-500 group-hover:scale-110 transition-transform">
-                                            <Camera size={32} />
-                                        </div>
-                                        <div className="text-left">
-                                            <h3 className="font-black text-slate-800 tracking-tight">Scanner le carnet</h3>
-                                            <p className="text-xs text-slate-400 font-medium">Prenez une photo des vaccins</p>
-                                        </div>
-                                    </button>
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Observations médicales</label>
+                                        <textarea
+                                            placeholder="Ex: Allergie à la pénicilline, Asthme léger, Groupe sanguin O+..."
+                                            className="w-full px-8 py-6 bg-white border-2 border-slate-50 rounded-[2.5rem] focus:border-sky-500 outline-none transition-all shadow-sm focus:shadow-xl focus:shadow-sky-100 font-medium text-slate-700 min-h-[150px] resize-none"
+                                            value={formData.medicalInfo}
+                                            onChange={(e) => setFormData({ ...formData, medicalInfo: e.target.value })}
+                                        />
+                                    </div>
 
-                                    <button
-                                        onClick={() => setFormData({ ...formData, medicalInfo: "Manuel" })}
-                                        className={`w-full p-6 bg-white border-2 rounded-[2.5rem] flex items-center gap-6 hover:shadow-xl transition-all group ${formData.medicalInfo === "Manuel" ? "border-sky-500" : "border-slate-50"
-                                            }`}
-                                    >
-                                        <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
-                                            <FileText size={32} />
+                                    <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex gap-4">
+                                        <div className="w-10 h-10 bg-amber-200/50 rounded-xl flex items-center justify-center text-amber-700 shrink-0">
+                                            <Stethoscope size={20} />
                                         </div>
-                                        <div className="text-left">
-                                            <h3 className="font-black text-slate-800 tracking-tight">Saisie Manuelle</h3>
-                                            <p className="text-xs text-slate-400 font-medium">Entrez les vaccins un à un</p>
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        onClick={handleFinish}
-                                        className="w-full py-5 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-slate-600 transition-colors mt-4"
-                                    >
-                                        Terminer sans infos médicales
-                                    </button>
+                                        <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                                            Ces informations aideront le personnel soignant lors des futurs rendez-vous de vaccination.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         )}

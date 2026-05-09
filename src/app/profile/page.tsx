@@ -19,7 +19,10 @@ import {
     CheckCircle2,
     Clock,
     Activity,
-    ScanLine
+    ScanLine,
+    Stethoscope,
+    X,
+    Save
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -31,40 +34,19 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-const profiles = [
-    {
-        id: 1,
-        name: "Lucas Kamga",
-        age: "14 mois",
-        image: "https://images.unsplash.com/photo-1544126592-807daa2b567b?auto=format&fit=crop&q=80&w=200&h=200",
-        color: "sky",
-        stats: { weight: "10.5 kg", height: "78 cm", group: "O+" },
-        badges: [
-            { name: "Premier Pas", icon: Award, earned: true },
-            { name: "P'tit Brave", icon: Star, earned: true }
-        ],
-        growth: [45, 60, 55, 75, 85, 80, 78]
-    },
-    {
-        id: 2,
-        name: "Sarah Kamga",
-        age: "3 ans",
-        image: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&q=80&w=200&h=200",
-        color: "rose",
-        stats: { weight: "15.2 kg", height: "96 cm", group: "O+" },
-        badges: [
-            { name: "Super Défense", icon: Trophy, earned: true },
-            { name: "Curiosité", icon: Star, earned: true }
-        ],
-        growth: [70, 75, 82, 88, 92, 95, 96]
-    }
-];
-
 export default function ProfilePage() {
     const [children, setChildren] = useState<any[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editData, setEditData] = useState({
+        name: "",
+        image: "",
+        medicalInfo: "",
+        birthDate: ""
+    });
+    const [isSaving, setIsSaving] = useState(false);
 
     const fetchChildren = () => {
         fetch("/api/children")
@@ -84,6 +66,58 @@ export default function ProfilePage() {
     const handleNext = () => setCurrentIndex((prev) => (prev + 1) % children.length);
     const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + children.length) % children.length);
 
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file && activeProfile) {
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64 = reader.result as string;
+                try {
+                    const res = await fetch(`/api/children/${activeProfile.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ image: base64 }),
+                    });
+                    if (res.ok) fetchChildren();
+                } catch (error) {
+                    console.error("Failed to update image", error);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleUpdateChild = async () => {
+        if (!activeProfile) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch(`/api/children/${activeProfile.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(editData),
+            });
+            if (res.ok) {
+                fetchChildren();
+                setIsEditModalOpen(false);
+            }
+        } catch (error) {
+            console.error("Failed to update child", error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const openEditModal = () => {
+        if (!activeProfile) return;
+        setEditData({
+            name: activeProfile.name,
+            image: activeProfile.image || "",
+            medicalInfo: activeProfile.medicalInfo || "",
+            birthDate: new Date(activeProfile.birthDate).toISOString().split('T')[0]
+        });
+        setIsEditModalOpen(true);
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
@@ -95,9 +129,7 @@ export default function ProfilePage() {
     if (children.length === 0) {
         return (
             <div className="max-w-2xl mx-auto py-20 text-center space-y-8 relative overflow-hidden">
-                {/* Decorative blobs */}
                 <div className="absolute -top-24 -left-24 w-96 h-96 bg-sky-200/20 rounded-full blur-3xl animate-pulse-slow" />
-                
                 <div className="relative z-10 w-32 h-32 bg-gradient-to-br from-sky-400 to-blue-600 rounded-[3rem] flex items-center justify-center text-white mx-auto shadow-2xl shadow-sky-200">
                     <Plus size={54} strokeWidth={3} />
                 </div>
@@ -114,13 +146,11 @@ export default function ProfilePage() {
 
     return (
         <div className="max-w-6xl mx-auto space-y-12 pb-20 relative">
-            {/* Background Decorations */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
                 <div className="absolute top-[10%] -left-[5%] w-[40%] h-[40%] bg-sky-100/40 rounded-full blur-[120px] animate-pulse-slow" />
                 <div className="absolute bottom-[10%] -right-[5%] w-[35%] h-[35%] bg-violet-100/30 rounded-full blur-[100px]" />
             </div>
 
-            {/* Header with Switcher */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 pt-4">
                 <div className="space-y-2">
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">
@@ -147,9 +177,6 @@ export default function ProfilePage() {
                                         <User size={24} />
                                     </div>
                                 )}
-                                {idx === currentIndex && (
-                                    <div className="absolute inset-0 bg-sky-500/10" />
-                                )}
                             </button>
                         ))}
                         <Link href="/children/add" className="z-10 w-14 h-14 rounded-full border-4 border-white border-dashed bg-slate-50 flex items-center justify-center text-slate-400 hover:text-sky-500 transition-all active:scale-95 shadow-md">
@@ -163,7 +190,6 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            {/* Profile Content */}
             <AnimatePresence mode="wait">
                 <motion.div
                     key={activeProfile.id}
@@ -173,10 +199,8 @@ export default function ProfilePage() {
                     transition={{ duration: 0.5, ease: "circOut" }}
                     className="grid grid-cols-1 lg:grid-cols-12 gap-10"
                 >
-                    {/* LEFT PANEL: Identity */}
                     <div className="lg:col-span-4 space-y-8">
                         <div className="glass-card p-10 text-center relative overflow-hidden group border-white/80 bg-white/40 backdrop-blur-xl shadow-2xl shadow-sky-900/5">
-                            {/* Decorative background circle */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-sky-100/30 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-sky-200/40 transition-colors" />
                             
                             <div className="relative inline-block mb-10">
@@ -189,7 +213,7 @@ export default function ProfilePage() {
                                 </div>
                                 <label className="absolute -bottom-2 -right-2 w-14 h-14 bg-gradient-to-tr from-sky-400 to-blue-600 text-white rounded-[1.5rem] flex items-center justify-center border-4 border-white shadow-xl cursor-pointer hover:scale-110 active:scale-90 transition-all">
                                     <Camera size={24} />
-                                    <input type="file" className="hidden" />
+                                    <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
                                 </label>
                             </div>
 
@@ -225,7 +249,10 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        <button className="w-full py-6 px-8 rounded-[2.5rem] bg-white border border-slate-200 text-slate-700 font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 shadow-xl shadow-slate-200/50 hover:bg-slate-50 hover:-translate-y-1 active:translate-y-0 transition-all group">
+                        <button 
+                            onClick={openEditModal}
+                            className="w-full py-6 px-8 rounded-[2.5rem] bg-white border border-slate-200 text-slate-700 font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 shadow-xl shadow-slate-200/50 hover:bg-slate-50 hover:-translate-y-1 active:translate-y-0 transition-all group"
+                        >
                             <Edit2 size={18} className="text-sky-500" />
                             Modifier les informations
                         </button>
@@ -236,9 +263,7 @@ export default function ProfilePage() {
                         </Link>
                     </div>
 
-                    {/* RIGHT PANEL: Stats & Badges */}
                     <div className="lg:col-span-8 space-y-10">
-                        {/* Summary Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="glass-card p-8 bg-gradient-to-br from-sky-400 to-blue-600 border-none shadow-2xl shadow-sky-200 relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
@@ -293,7 +318,12 @@ export default function ProfilePage() {
                                             : "À jour pour le moment"
                                         }
                                     </h4>
-                                    <p className="text-slate-500 text-sm font-medium">Recommandé à 18 mois</p>
+                                    <p className="text-slate-500 text-sm font-medium">
+                                        {activeProfile.vaccinations?.find((v: any) => v.status === 'PENDING')
+                                            ? `Prévu à ${activeProfile.vaccinations.find((v: any) => v.status === 'PENDING').vaccine.recommendedAge} mois`
+                                            : "Aucun vaccin prévu"
+                                        }
+                                    </p>
                                 </div>
                                 <div className="mt-8">
                                     <button onClick={() => setIsCalendarOpen(true)} className="w-full py-3 bg-sky-50 text-sky-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-sky-500 hover:text-white transition-all">
@@ -303,7 +333,43 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* Badges Section */}
+                        <div className="glass-card p-10 border-white/80 bg-white/40 backdrop-blur-xl shadow-2xl shadow-sky-900/5 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-8 opacity-5">
+                                <Stethoscope size={100} />
+                            </div>
+                            <div className="space-y-6 relative z-10">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                                        <Stethoscope className="text-rose-500" size={32} />
+                                        Notes Médicales
+                                    </h3>
+                                    <button 
+                                        onClick={openEditModal}
+                                        className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-sky-500 transition-colors"
+                                    >
+                                        <Edit2 size={18} />
+                                    </button>
+                                </div>
+                                {activeProfile.medicalInfo ? (
+                                    <div className="bg-white/60 rounded-3xl p-6 border border-white/80">
+                                        <p className="text-slate-600 font-medium leading-relaxed whitespace-pre-wrap">
+                                            {activeProfile.medicalInfo}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-50/50 rounded-3xl p-10 text-center border-2 border-dashed border-slate-200">
+                                        <p className="text-slate-400 font-bold text-sm">Aucune information médicale saisie.</p>
+                                        <button 
+                                            onClick={openEditModal}
+                                            className="mt-4 text-sky-500 font-black uppercase tracking-widest text-[10px] hover:underline"
+                                        >
+                                            Ajouter maintenant
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
@@ -344,9 +410,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* Growth Chart Preview */}
                         <div className="glass-card p-10 border-white/80 bg-white/40 backdrop-blur-xl shadow-2xl shadow-sky-900/5 relative overflow-hidden group">
-                            {/* Decorative element */}
                             <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-sky-500 via-violet-500 to-amber-500" />
                             
                             <div className="flex items-center justify-between mb-12">
@@ -383,7 +447,6 @@ export default function ProfilePage() {
                                         <span className="text-[10px] font-black text-slate-400 uppercase">Mois {i + 1}</span>
                                     </div>
                                 ))}
-                                {/* Artistic background grid */}
                                 {[0, 33, 66, 100].map(line => (
                                     <div key={line} className="absolute inset-x-0 border-t border-slate-100 pointer-events-none" style={{ bottom: `${line}%` }} />
                                 ))}
@@ -393,16 +456,87 @@ export default function ProfilePage() {
                 </motion.div>
             </AnimatePresence>
 
-            {/* Mobile Floating Scan Button */}
-            <div className="fixed bottom-24 right-6 lg:hidden z-50">
-                <Link href="/scan" className="relative flex items-center justify-center w-16 h-16 bg-gradient-to-r from-sky-500 to-blue-600 rounded-[2rem] text-white shadow-2xl shadow-sky-500/40 border-4 border-white hover:scale-105 active:scale-95 transition-transform">
-                    <ScanLine size={24} />
-                    <span className="absolute -top-2 -right-2 w-4 h-4 bg-rose-500 rounded-full animate-ping opacity-75" />
-                    <span className="absolute -top-2 -right-2 w-4 h-4 bg-rose-500 rounded-full border-2 border-white" />
-                </Link>
-            </div>
+            <AnimatePresence>
+                {isEditModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden"
+                        >
+                            <div className="p-8 space-y-8">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-2xl font-black text-slate-900">Modifier le profil</h2>
+                                    <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                                        <X size={24} className="text-slate-400" />
+                                    </button>
+                                </div>
 
-            {/* Modals */}
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Nom de l'enfant</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700"
+                                            value={editData.name}
+                                            onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Date de naissance</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700"
+                                            value={editData.birthDate}
+                                            onChange={(e) => setEditData({ ...editData, birthDate: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Infos Médicales</label>
+                                        <textarea
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-medium text-slate-700 min-h-[120px] resize-none"
+                                            value={editData.medicalInfo}
+                                            onChange={(e) => setEditData({ ...editData, medicalInfo: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => setIsEditModalOpen(false)}
+                                        className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        onClick={handleUpdateChild}
+                                        disabled={isSaving}
+                                        className="flex-1 py-4 gradient-primary text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-sky-200 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all"
+                                    >
+                                        {isSaving ? "Enregistrement..." : (
+                                            <>
+                                                <Save size={18} />
+                                                Enregistrer
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <ChildVaccinationModal
                 child={activeProfile}
                 isOpen={isCalendarOpen}

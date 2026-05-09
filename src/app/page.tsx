@@ -303,6 +303,20 @@ export default function Dashboard() {
                           </div>
                         </div>
 
+                        </div>
+
+                        {child.medicalInfo && (
+                          <div className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100/50">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Stethoscope size={12} className="text-rose-500" />
+                              <span className="text-[9px] font-black uppercase text-rose-600 tracking-wider">Note Médicale</span>
+                            </div>
+                            <p className="text-[11px] text-slate-600 font-medium line-clamp-2 italic">
+                              "{child.medicalInfo}"
+                            </p>
+                          </div>
+                        )}
+
                         <div className="bg-slate-50/80 backdrop-blur-sm p-6 rounded-[2rem] space-y-4 border border-white/50 shadow-inner">
                           <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest">
                             <span className="text-slate-400 flex items-center gap-2">

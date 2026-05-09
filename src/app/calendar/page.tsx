@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import VaccineDetailModal from "@/components/vaccines/VaccineDetailModal";
 
 // Helper to format date
 const formatDate = (dateString: string) => {
@@ -32,6 +33,7 @@ export default function CalendarPage() {
     const [children, setChildren] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+    const [selectedVaccine, setSelectedVaccine] = useState<any>(null);
 
     useEffect(() => {
         fetch("/api/children")
@@ -189,12 +191,15 @@ export default function CalendarPage() {
                                         "ml-24 md:ml-0 md:w-1/2 flex",
                                         isLeft ? "md:pr-16 md:justify-end" : "md:pl-16 md:justify-start"
                                     )}>
-                                        <div className={cn(
-                                            "w-full glass-card p-6 border-2 transition-all hover:-translate-y-2 relative overflow-hidden group",
-                                            isDone 
-                                                ? "bg-emerald-50/80 border-emerald-100 shadow-emerald-100 opacity-70 hover:opacity-100" 
-                                                : `bg-white ${borderCol} shadow-xl hover:shadow-2xl`
-                                        )}>
+                                        <button 
+                                            onClick={() => setSelectedVaccine(v.vaccine)}
+                                            className={cn(
+                                                "w-full glass-card p-6 border-2 transition-all hover:-translate-y-2 relative overflow-hidden group text-left",
+                                                isDone 
+                                                    ? "bg-emerald-50/80 border-emerald-100 shadow-emerald-100 opacity-70 hover:opacity-100" 
+                                                    : `bg-white ${borderCol} shadow-xl hover:shadow-2xl`
+                                            )}
+                                        >
                                             {/* Decorative blob in card */}
                                             {!isDone && (
                                                 <div className={cn(
@@ -235,7 +240,7 @@ export default function CalendarPage() {
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
+                                        </button>
                                     </div>
                                 </motion.div>
                             );
@@ -251,6 +256,12 @@ export default function CalendarPage() {
                     Chaque vaccin est un super-pouvoir débloqué !
                 </p>
             </div>
+
+            <VaccineDetailModal 
+                vaccine={selectedVaccine}
+                isOpen={!!selectedVaccine}
+                onClose={() => setSelectedVaccine(null)}
+            />
         </div>
     );
 }
