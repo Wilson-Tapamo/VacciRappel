@@ -303,8 +303,6 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        </div>
-
                         {child.medicalInfo && (
                           <div className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100/50">
                             <div className="flex items-center gap-2 mb-1">
