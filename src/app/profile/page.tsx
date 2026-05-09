@@ -260,28 +260,37 @@ export default function ProfilePage() {
                                     Né le {new Date(activeProfile.birthDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                                 </p>
                             </div>
-
-                            <div className="grid grid-cols-3 gap-4 mt-12 pt-10 border-t border-slate-100">
-                                <div className="space-y-1">
-                                    <div className="w-10 h-10 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-500 mx-auto shadow-sm">
-                                        <Weight size={20} />
+                            <div className="grid grid-cols-3 gap-3 mt-10 p-5 bg-slate-50/50 rounded-3xl border border-white">
+                                <div className="space-y-1 text-center">
+                                    <div className="w-10 h-10 bg-sky-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-sky-200">
+                                        <Weight size={18} />
                                     </div>
-                                    <p className="text-[9px] text-slate-400 font-black uppercase">Poids</p>
-                                    <p className="text-sm font-black text-slate-800">{activeProfile.weight || "--"} kg</p>
+                                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mt-2">Poids Actuel</p>
+                                    <p className="text-sm font-black text-slate-900">
+                                        {activeProfile.growthRecords?.length > 0 
+                                            ? `${activeProfile.growthRecords[activeProfile.growthRecords.length-1].weight} kg` 
+                                            : "--"
+                                        }
+                                    </p>
                                 </div>
-                                <div className="space-y-1">
-                                    <div className="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 mx-auto shadow-sm">
-                                        <Ruler size={20} />
+                                <div className="space-y-1 text-center border-x border-slate-200/50">
+                                    <div className="w-10 h-10 bg-emerald-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-emerald-200">
+                                        <Ruler size={18} />
                                     </div>
-                                    <p className="text-[9px] text-slate-400 font-black uppercase">Taille</p>
-                                    <p className="text-sm font-black text-slate-800">{activeProfile.height || "--"} cm</p>
+                                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mt-2">Taille Actuelle</p>
+                                    <p className="text-sm font-black text-slate-900">
+                                        {activeProfile.growthRecords?.length > 0 
+                                            ? `${activeProfile.growthRecords[activeProfile.growthRecords.length-1].height} cm` 
+                                            : "--"
+                                        }
+                                    </p>
                                 </div>
-                                <div className="space-y-1">
-                                    <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 mx-auto shadow-sm">
-                                        <Activity size={20} />
+                                <div className="space-y-1 text-center">
+                                    <div className="w-10 h-10 bg-rose-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-rose-200">
+                                        <Activity size={18} />
                                     </div>
-                                    <p className="text-[9px] text-slate-400 font-black uppercase">Groupe</p>
-                                    <p className="text-sm font-black text-slate-800">{activeProfile.bloodGroup || "--"}</p>
+                                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mt-2">Groupe Sanguin</p>
+                                    <p className="text-sm font-black text-slate-900">{activeProfile.bloodGroup || "--"}</p>
                                 </div>
                             </div>
                         </div>
@@ -533,18 +542,34 @@ export default function ProfilePage() {
                                                 onChange={(e) => setEditData({ ...editData, birthDate: e.target.value })}
                                             />
                                         </div>
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 col-span-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Groupe Sanguin</label>
-                                            <select
-                                                className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-sky-500 rounded-2xl outline-none transition-all font-bold text-slate-700 appearance-none"
-                                                value={editData.bloodGroup}
-                                                onChange={(e) => setEditData({ ...editData, bloodGroup: e.target.value })}
-                                            >
-                                                <option value="">Sélectionner</option>
-                                                {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(g => (
-                                                    <option key={g} value={g}>{g}</option>
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                                {[
+                                                    { id: "A+", info: "A+, AB+" },
+                                                    { id: "A-", info: "A±, AB±" },
+                                                    { id: "B+", info: "B+, AB+" },
+                                                    { id: "B-", info: "B±, AB±" },
+                                                    { id: "AB+", info: "Rec. Univ." },
+                                                    { id: "AB-", info: "AB±" },
+                                                    { id: "O+", info: "RH+" },
+                                                    { id: "O-", info: "Univ. 🌟" }
+                                                ].map(g => (
+                                                    <button 
+                                                        key={g.id}
+                                                        onClick={() => setEditData({ ...editData, bloodGroup: g.id })}
+                                                        className={cn(
+                                                            "p-3 rounded-2xl border-2 transition-all text-center flex flex-col gap-0.5",
+                                                            editData.bloodGroup === g.id 
+                                                                ? "border-sky-500 bg-sky-50 text-sky-600 shadow-md shadow-sky-100" 
+                                                                : "border-slate-50 bg-slate-50/50 text-slate-400 hover:border-slate-200"
+                                                        )}
+                                                    >
+                                                        <span className="text-sm font-black">{g.id}</span>
+                                                        <span className="text-[7px] font-bold uppercase tracking-tight opacity-70">{g.info}</span>
+                                                    </button>
                                                 ))}
-                                            </select>
+                                            </div>
                                         </div>
                                     </div>
 

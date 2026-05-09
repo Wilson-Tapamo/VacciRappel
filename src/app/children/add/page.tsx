@@ -219,17 +219,46 @@ export default function AddChildPage() {
                                 </div>
 
                                 <div className="space-y-6">
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Groupe Sanguin</label>
-                                        <div className="grid grid-cols-4 gap-3">
-                                            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((group) => (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {[
+                                                { id: "A+", info: "Peut donner à A+, AB+" },
+                                                { id: "A-", info: "Peut donner à A±, AB±" },
+                                                { id: "B+", info: "Peut donner à B+, AB+" },
+                                                { id: "B-", info: "Peut donner à B±, AB±" },
+                                                { id: "AB+", info: "Receveur universel" },
+                                                { id: "AB-", info: "Peut donner à AB±" },
+                                                { id: "O+", info: "Donneur à tous les RH+" },
+                                                { id: "O-", info: "Donneur universel 🌟" }
+                                            ].map((group) => (
                                                 <button
-                                                    key={group}
-                                                    onClick={() => setFormData({ ...formData, bloodGroup: group })}
-                                                    className={`py-3 rounded-2xl border-2 transition-all font-black text-xs ${formData.bloodGroup === group ? "border-sky-500 bg-sky-50 text-sky-600" : "border-slate-50 bg-white text-slate-400"
+                                                    key={group.id}
+                                                    onClick={() => setFormData({ ...formData, bloodGroup: group.id })}
+                                                    className={`p-4 rounded-3xl border-2 transition-all text-left flex flex-col gap-1 relative overflow-hidden group ${formData.bloodGroup === group.id
+                                                        ? "border-sky-500 bg-sky-50 shadow-lg shadow-sky-100"
+                                                        : "border-slate-50 bg-white hover:border-slate-200"
                                                         }`}
                                                 >
-                                                    {group}
+                                                    <div className="flex items-center justify-between">
+                                                        <span className={`text-lg font-black ${formData.bloodGroup === group.id ? "text-sky-600" : "text-slate-800"}`}>
+                                                            {group.id}
+                                                        </span>
+                                                        {formData.bloodGroup === group.id && (
+                                                            <div className="w-5 h-5 bg-sky-500 rounded-full flex items-center justify-center text-white">
+                                                                <Check size={12} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <p className={`text-[9px] font-bold uppercase tracking-tight ${formData.bloodGroup === group.id ? "text-sky-400" : "text-slate-400"}`}>
+                                                        {group.info}
+                                                    </p>
+                                                    {formData.bloodGroup === group.id && (
+                                                        <motion.div
+                                                            layoutId="activeBlood"
+                                                            className="absolute inset-0 bg-sky-500/5 pointer-events-none"
+                                                        />
+                                                    )}
                                                 </button>
                                             ))}
                                         </div>
