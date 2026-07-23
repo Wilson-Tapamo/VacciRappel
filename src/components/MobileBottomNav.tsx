@@ -4,11 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
     Home,
-    MapPin,
-    ScanLine,
     User,
     HeartPulse,
-    Building2,
     ShieldCheck,
     Calendar
 } from "lucide-react";
@@ -19,7 +16,7 @@ const navItems = [
     { name: "Accueil", href: "/", icon: Home },
     { name: "Vaccins", href: "/vaccine-library", icon: ShieldCheck },
     { name: "Support", href: "/support", icon: HeartPulse, isPrimary: true },
-    { name: "Hôpitaux", href: "/hospitals", icon: Building2 },
+    { name: "Calendrier", href: "/calendar", icon: Calendar },
     { name: "Profil", href: "/profile", icon: User },
 ];
 

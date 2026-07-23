@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
     Home,
@@ -15,7 +16,9 @@ import {
     X,
     HelpCircle,
     Settings,
-    PlusCircle
+    PlusCircle,
+    Download,
+    WifiOff
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,6 +26,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
     { name: "Tableau de Bord", href: "/", icon: Home },
+    { name: "Calendrier", href: "/calendar", icon: Calendar },
     { name: "Scanner Carnet", href: "/scan", icon: ScanLine },
     { name: "Carte Santé", href: "/map", icon: MapPin },
     { name: "Hôpitaux", href: "/hospitals", icon: Building2 },
@@ -30,6 +34,7 @@ const navItems = [
     { name: "Profil Enfant", href: "/profile", icon: User },
     { name: "Alertes", href: "/alerts", icon: Bell },
     { name: "Support IA", href: "/support", icon: HelpCircle },
+    { name: "Mode hors ligne", href: "/offline", icon: WifiOff },
 ];
 
 export default function Sidebar() {
@@ -68,9 +73,7 @@ export default function Sidebar() {
             >
                 <div className="flex flex-col h-full p-6">
                     <div className="flex items-center gap-3 mb-10">
-                        <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-sky-200">
-                            <ShieldCheck size={24} />
-                        </div>
+                        <Image src="/icons/icon-192.png" alt="" width={44} height={44} className="w-11 h-11 rounded-xl shadow-lg shadow-sky-200" />
                         <h1 className="font-bold text-xl tracking-tight text-slate-800">VacciRappel</h1>
                     </div>
 
@@ -100,6 +103,13 @@ export default function Sidebar() {
                     </nav>
 
                     <div className="pt-6 border-t border-slate-200/50">
+                        <button
+                            onClick={() => window.dispatchEvent(new Event("vacci:show-install"))}
+                            className="flex items-center gap-3 px-4 py-3 w-full text-slate-500 hover:text-sky-700 hover:bg-white/40 rounded-xl transition-colors mb-1"
+                        >
+                            <Download size={20} />
+                            <span className="text-sm font-medium">Installer l’application</span>
+                        </button>
                         <button className="flex items-center gap-3 px-4 py-3 w-full text-slate-500 hover:text-slate-900 transition-colors mb-2">
                             <Settings size={20} />
                             <span className="text-sm font-medium">Paramètres</span>

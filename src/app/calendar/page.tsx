@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Calendar as CalendarIcon,
-    ChevronLeft,
-    ChevronRight,
     Star,
     Heart,
     ShieldCheck,
@@ -17,6 +16,28 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import VaccineDetailModal from "@/components/vaccines/VaccineDetailModal";
+import CatchUpPlanner from "@/components/calendar/CatchUpPlanner";
+
+type Vaccine = {
+    name: string;
+    protection?: string;
+    [key: string]: unknown;
+};
+
+type Vaccination = {
+    id: string;
+    status: string;
+    date: string;
+    vaccine: Vaccine;
+};
+
+type Child = {
+    id: string;
+    name: string;
+    image?: string;
+    birthDate: string;
+    vaccinations?: Vaccination[];
+};
 
 // Helper to format date
 const formatDate = (dateString: string) => {
@@ -30,17 +51,18 @@ const formatDate = (dateString: string) => {
 };
 
 export default function CalendarPage() {
-    const [children, setChildren] = useState<any[]>([]);
+    const [children, setChildren] = useState<Child[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
-    const [selectedVaccine, setSelectedVaccine] = useState<any>(null);
+    const [selectedVaccine, setSelectedVaccine] = useState<Vaccine | null>(null);
 
     useEffect(() => {
         fetch("/api/children")
             .then(res => res.json())
             .then(data => {
-                setChildren(data);
-                if (data.length > 0) setSelectedChildId(data[0].id);
+                const childData = Array.isArray(data) ? (data as Child[]) : [];
+                setChildren(childData);
+                if (childData.length > 0) setSelectedChildId(childData[0].id);
                 setLoading(false);
             });
     }, []);
@@ -55,18 +77,20 @@ export default function CalendarPage() {
 
     if (children.length === 0) {
         return (
-            <div className="max-w-2xl mx-auto py-20 text-center space-y-8 relative overflow-hidden">
-                <div className="absolute -top-24 -left-24 w-96 h-96 bg-rose-200/20 rounded-full blur-3xl animate-pulse-slow" />
-                <div className="relative z-10 w-32 h-32 bg-gradient-to-br from-rose-400 to-pink-600 rounded-[3rem] flex items-center justify-center text-white mx-auto shadow-2xl shadow-rose-200">
-                    <CalendarIcon size={54} strokeWidth={3} />
+            <div className="max-w-6xl mx-auto space-y-8 pb-20">
+                <CatchUpPlanner />
+                <div className="rounded-[2rem] border border-slate-200 bg-white px-6 py-10 text-center shadow-sm">
+                    <div className="w-20 h-20 bg-gradient-to-br from-rose-400 to-pink-600 rounded-[1.75rem] flex items-center justify-center text-white mx-auto shadow-xl shadow-rose-200">
+                        <CalendarIcon size={36} strokeWidth={3} />
+                    </div>
+                    <div className="mt-5 space-y-2">
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Personnalisez le calendrier</h1>
+                        <p className="text-slate-500 font-medium max-w-md mx-auto">Ajoutez un enfant pour calculer sa tranche d’âge et retrouver son suivi vaccinal.</p>
+                    </div>
+                    <Link href="/children/add" className="mt-6 inline-flex px-8 py-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-rose-200 hover:scale-105 active:scale-95 transition-all">
+                        Ajouter un enfant
+                    </Link>
                 </div>
-                <div className="space-y-3 relative z-10">
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">Calendrier Vide</h1>
-                    <p className="text-slate-500 text-lg font-medium max-w-md mx-auto">Ajoutez un enfant pour découvrir son programme de vaccination personnalisé.</p>
-                </div>
-                <Link href="/children/add" className="inline-flex px-12 py-5 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-[2.5rem] font-black uppercase tracking-widest text-xs shadow-2xl shadow-rose-200 hover:scale-105 active:scale-95 transition-all relative z-10">
-                    Ajouter un enfant
-                </Link>
             </div>
         );
     }
@@ -90,7 +114,7 @@ export default function CalendarPage() {
     ];
 
     return (
-        <div className="max-w-4xl mx-auto space-y-10 pb-20 relative">
+        <div className="max-w-6xl mx-auto space-y-10 pb-20 relative">
             {/* Background Decorations */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
                 <div className="absolute top-[5%] -left-[10%] w-[50%] h-[50%] bg-rose-100/40 rounded-full blur-[120px] animate-pulse-slow" />
@@ -130,7 +154,7 @@ export default function CalendarPage() {
                         )}
                     >
                         {child.image ? (
-                            <img src={child.image} alt={child.name} className="w-8 h-8 rounded-full object-cover shadow-sm" />
+                            <Image src={child.image} alt={child.name} width={32} height={32} unoptimized className="w-8 h-8 rounded-full object-cover shadow-sm" />
                         ) : (
                             <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-white", selectedChildId === child.id ? "bg-rose-400" : "bg-slate-300")}>
                                 <Baby size={16} />
@@ -139,6 +163,16 @@ export default function CalendarPage() {
                         {child.name.split(' ')[0]}
                     </button>
                 ))}
+            </div>
+
+            <CatchUpPlanner child={activeChild} />
+
+            <div className="flex items-center gap-3 pt-2">
+                <div className="h-px flex-1 bg-slate-200" />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    Suivi vaccinal enregistré
+                </p>
+                <div className="h-px flex-1 bg-slate-200" />
             </div>
 
             {/* Timeline */}
