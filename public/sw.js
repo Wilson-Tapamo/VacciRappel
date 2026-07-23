@@ -99,3 +99,20 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheFirst(request));
   }
 });
+
+self.addEventListener("push", (event) => {
+  const data = event.data?.json?.() || {};
+  event.waitUntil(
+    self.registration.showNotification(data.title || "VacciRappel", {
+      body: data.body || "Un rappel vaccinal vous attend.",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { url: data.url || "/alerts" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(self.clients.openWindow(event.notification.data?.url || "/alerts"));
+});

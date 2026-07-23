@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { Download, Share, Smartphone, WifiOff, X } from "lucide-react";
+import { syncQueuedMutations } from "@/lib/offlineQueue";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -64,6 +65,14 @@ export default function PwaManager() {
       window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
     };
   }, []);
+
+  useEffect(() => {
+    if (isOnline) {
+      syncQueuedMutations().catch((error) => {
+        console.error("Queue synchronization failed:", error);
+      });
+    }
+  }, [isOnline]);
 
   useEffect(() => {
     if (isRunningStandalone()) return;

@@ -8,66 +8,228 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  name        String?
-  phone       String   @unique
-  password    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  children    Child[]
+  id                 String              @id @default(cuid())
+  name               String?
+  phone              String              @unique
+  password           String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  children           Child[]             @relation("ChildOwner")
+  familyAccess       FamilyAccess[]
+  familyInvites      FamilyInvite[]      @relation("InviteCreator")
+  reminderPreference ReminderPreference?
+  pushSubscriptions  PushSubscription[]
+  reminderDeliveries ReminderDelivery[]
 }
 
 model Child {
-  id                  String   @id @default(cuid())
-  name                String
-  birthDate           DateTime
-  gender              String
+  id                 String                   @id @default(cuid())
+  name               String
+  birthDate          DateTime
+  gender             String
   image              String?
   bloodGroup         String?
   allergies          String?
   conditions         String?
-  medicalInfo        String?  // Special notes
+  medicalInfo        String? // Special notes
   medicalBookletScan String?
-  userId              String
-  user                User     @relation(fields: [userId], references: [id])
-  vaccinations        VaccinationRecord[]
-  growthRecords       GrowthRecord[]
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  userId             String
+  version            Int                      @default(1)
+  user               User                     @relation("ChildOwner", fields: [userId], references: [id], onDelete: Cascade)
+  vaccinations       VaccinationRecord[]
+  growthRecords      GrowthRecord[]
+  familyAccess       FamilyAccess[]
+  familyInvites      FamilyInvite[]
+  appointments       VaccinationAppointment[]
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  @@index([userId])
 }
 
 model GrowthRecord {
-  id        String   @id @default(cuid())
-  childId   String
-  weight    Float?   // in kg
-  height    Float?   // in cm
-  date      DateTime @default(now())
-  child     Child    @relation(fields: [childId], references: [id])
+  id      String   @id @default(cuid())
+  childId String
+  weight  Float? // in kg
+  height  Float? // in cm
+  date    DateTime @default(now())
+  child   Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId, date])
 }
 
 model Vaccine {
-  id                 String   @id @default(cuid())
+  id                 String                        @id @default(cuid())
+  code               String?                       @unique
+  seriesCode         String?
+  doseNumber         Int                           @default(1)
   name               String
   description        String?
-  recommendedAge     Int      // in months
-  importance         String?  // Obligatoire, Fondamental, etc.
-  protection         String?  // Summary of what it protects against
-  longDescription    String?  @db.Text // Importance in Cameroon
-  benefits           String[] 
+  recommendedAge     Int                           @default(0) // legacy value in months
+  recommendedAgeDays Int?
+  minIntervalDays    Int?
+  eligibilityRules   Json?
+  route              String?
+  importance         String? // Obligatoire, Fondamental, etc.
+  protection         String? // Summary of what it protects against
+  longDescription    String?                       @db.Text // Importance in Cameroon
+  benefits           String[]
   sideEffectsCommon  String[]
   sideEffectsRare    String[]
-  didYouKnow         String?  @db.Text
-  fullProtectionList Json?    // Structured list of protections
+  didYouKnow         String?                       @db.Text
+  fullProtectionList Json? // Structured list of protections
   records            VaccinationRecord[]
+  appointments       VaccinationAppointment[]
+  availability       FacilityVaccineAvailability[]
+
+  @@index([seriesCode, doseNumber])
+  @@index([recommendedAgeDays])
 }
 
 model VaccinationRecord {
+  id          String    @id @default(cuid())
+  childId     String
+  vaccineId   String
+  status      String // DONE, PENDING, OVERDUE
+  date        DateTime
+  completedAt DateTime?
+  version     Int       @default(1)
+  child       Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  vaccine     Vaccine   @relation(fields: [vaccineId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([childId, vaccineId])
+  @@index([childId, status, date])
+  @@index([vaccineId])
+}
+
+model FamilyAccess {
   id        String   @id @default(cuid())
   childId   String
-  vaccineId String
-  status    String   // DONE, PENDING, OVERDUE
-  date      DateTime
-  child     Child    @relation(fields: [childId], references: [id])
-  vaccine   Vaccine  @relation(fields: [vaccineId], references: [id])
+  userId    String
+  role      String   @default("CAREGIVER")
   createdAt DateTime @default(now())
+  child     Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, userId])
+  @@index([userId])
+}
+
+model FamilyInvite {
+  id          String    @id @default(cuid())
+  childId     String
+  createdById String
+  tokenHash   String    @unique
+  role        String    @default("CAREGIVER")
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  child       Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  createdBy   User      @relation("InviteCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([childId])
+  @@index([createdById])
+  @@index([expiresAt])
+}
+
+model ReminderPreference {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  pushEnabled        Boolean  @default(true)
+  smsEnabled         Boolean  @default(false)
+  whatsappEnabled    Boolean  @default(false)
+  reminderDaysBefore Int[]    @default([7, 2, 0])
+  quietHoursStart    String?  @default("21:00")
+  quietHoursEnd      String?  @default("07:00")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique @db.Text
+  p256dh    String   @db.Text
+  auth      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model HealthFacility {
+  id             String                        @id @default(cuid())
+  name           String
+  type           String
+  address        String
+  phone          String?
+  website        String?
+  latitude       Float
+  longitude      Float
+  openingHours   Json
+  lastDeclaredAt DateTime?
+  createdAt      DateTime                      @default(now())
+  updatedAt      DateTime                      @updatedAt
+  availability   FacilityVaccineAvailability[]
+  appointments   VaccinationAppointment[]
+
+  @@index([latitude, longitude])
+}
+
+model FacilityVaccineAvailability {
+  id         String         @id @default(cuid())
+  facilityId String
+  vaccineId  String
+  status     String         @default("UNKNOWN")
+  quantity   Int?
+  note       String?
+  declaredAt DateTime       @default(now())
+  facility   HealthFacility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  vaccine    Vaccine        @relation(fields: [vaccineId], references: [id], onDelete: Cascade)
+
+  @@unique([facilityId, vaccineId])
+  @@index([vaccineId, status])
+}
+
+model VaccinationAppointment {
+  id           String             @id @default(cuid())
+  childId      String
+  vaccineId    String?
+  facilityId   String?
+  scheduledFor DateTime
+  status       String             @default("PROPOSED")
+  confirmedAt  DateTime?
+  version      Int                @default(1)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  child        Child              @relation(fields: [childId], references: [id], onDelete: Cascade)
+  vaccine      Vaccine?           @relation(fields: [vaccineId], references: [id])
+  facility     HealthFacility?    @relation(fields: [facilityId], references: [id])
+  deliveries   ReminderDelivery[]
+
+  @@index([childId, status, scheduledFor])
+  @@index([facilityId])
+  @@index([vaccineId])
+}
+
+model ReminderDelivery {
+  id            String                 @id @default(cuid())
+  appointmentId String
+  userId        String
+  channel       String
+  scheduledFor  DateTime
+  status        String                 @default("PENDING")
+  sentAt        DateTime?
+  error         String?
+  createdAt     DateTime               @default(now())
+  appointment   VaccinationAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([appointmentId, userId, channel, scheduledFor])
+  @@index([status, scheduledFor])
+  @@index([userId])
 }

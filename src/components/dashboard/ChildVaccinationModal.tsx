@@ -11,6 +11,7 @@ import {
     Loader2,
     ShieldCheck
 } from "lucide-react";
+import { mutateWithOfflineQueue } from "@/lib/offlineQueue";
 
 interface ChildVaccinationModalProps {
     child: any;
@@ -21,19 +22,24 @@ interface ChildVaccinationModalProps {
 
 export default function ChildVaccinationModal({ child, isOpen, onClose, onUpdate }: ChildVaccinationModalProps) {
     const [updating, setUpdating] = useState<string | null>(null);
+    const [notice, setNotice] = useState<string | null>(null);
 
-    const toggleStatus = async (recordId: string, currentStatus: string) => {
+    const toggleStatus = async (recordId: string, currentStatus: string, version: number) => {
         setUpdating(recordId);
         const newStatus = currentStatus === "DONE" ? "PENDING" : "DONE";
 
         try {
-            const res = await fetch(`/api/vaccinations/${recordId}`, {
+            const result = await mutateWithOfflineQueue({
+                url: `/api/vaccinations/${recordId}`,
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: newStatus })
+                body: { status: newStatus, baseVersion: version }
             });
 
-            if (res.ok) {
+            if (result.queued) {
+                setNotice(result.conflict
+                    ? "Conflit détecté : choisissez la version à conserver dans le mode hors ligne."
+                    : "Modification chiffrée sur cet appareil. Elle sera synchronisée à la reconnexion.");
+            } else if (result.ok) {
                 onUpdate();
             }
         } catch (error) {
@@ -94,6 +100,11 @@ export default function ChildVaccinationModal({ child, isOpen, onClose, onUpdate
 
                         {/* List */}
                         <div className="flex-1 overflow-y-auto p-8 space-y-4 scrollbar-hide">
+                            {notice && (
+                                <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4 text-xs font-bold leading-5 text-sky-900">
+                                    {notice}
+                                </div>
+                            )}
                             {vaccinations.length === 0 ? (
                                 <div className="text-center py-10 space-y-4">
                                     <p className="text-slate-400 font-medium italic">Aucun vaccin programmé.</p>
@@ -122,7 +133,7 @@ export default function ChildVaccinationModal({ child, isOpen, onClose, onUpdate
                                                 </div>
                                                 <div>
                                                     <h4 className={`font-black tracking-tight ${isDone ? "text-emerald-900" : "text-slate-800"}`}>
-                                                        {v.vaccine?.name}
+                                                        {v.vaccine?.name} · dose {v.vaccine?.doseNumber}
                                                     </h4>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <CalendarIcon size={12} className="text-slate-400" />
@@ -130,12 +141,17 @@ export default function ChildVaccinationModal({ child, isOpen, onClose, onUpdate
                                                             {date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                                                         </span>
                                                     </div>
+                                                    {!isDone && v.eligibility?.reasons?.length > 0 && (
+                                                        <p className="mt-2 max-w-xs text-[10px] font-bold leading-4 text-amber-700">
+                                                            {v.eligibility.reasons.join(" · ")}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
 
                                             <button
-                                                onClick={() => toggleStatus(v.id, v.status)}
-                                                disabled={isUpdating}
+                                                onClick={() => toggleStatus(v.id, v.status, v.version)}
+                                                disabled={isUpdating || (!isDone && v.eligibility && !v.eligibility.eligible)}
                                                 className={`px-5 py-3 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all flex items-center gap-2 ${isDone
                                                         ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
                                                         : "bg-slate-100 text-slate-500 hover:bg-sky-500 hover:text-white hover:shadow-lg hover:shadow-sky-200"

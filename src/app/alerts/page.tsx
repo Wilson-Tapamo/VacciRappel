@@ -11,6 +11,7 @@ import {
     Settings2,
     Volume2
 } from "lucide-react";
+import ReminderSettings from "@/components/reminders/ReminderSettings";
 
 const alerts = [
     { id: 1, title: 'Rappel de Vaccination', message: 'Lucas doit effectuer son rappel DTP dans 15 jours.', time: 'Il y a 2h', priority: 'high', category: 'Medical' },
@@ -61,6 +62,8 @@ export default function AlertsPage() {
                     </div>
                 </div>
             </div>
+
+            <ReminderSettings />
 
             {/* Filter Tabs */}
             <div className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar">

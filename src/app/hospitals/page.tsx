@@ -12,7 +12,7 @@ import Link from "next/link";
 import MobileHospitalTabs from "@/components/MobileHospitalTabs";
 import MapPage from "../map/page";
 
-const hospitals = [
+const hospitals: Hospital[] = [
     {
         id: 1,
         name: "Hôpital Gynéco-Obstétrique de Yaoundé",
@@ -26,6 +26,10 @@ const hospitals = [
         phone: "+237 222 21 48 64",
         website: "www.hgoy.cm",
         distance: "2.4 km",
+        latitude: 3.8996,
+        longitude: 11.5484,
+        lastStockUpdate: "Aujourd’hui à 08h30",
+        vaccineAvailability: { BCG: "AVAILABLE", Polio: "AVAILABLE", Rougeole: "LOW", DTP: "AVAILABLE", "Hépatite B": "AVAILABLE", "Méningite A": "UNKNOWN" },
         vaccineServices: ["BCG", "Polio", "Rougeole", "DTP", "Hépatite B", "Méningite A"],
         certifications: ["OMS Certified", "ISO 9001"],
         bedCount: 350,
@@ -53,6 +57,10 @@ const hospitals = [
         phone: "+237 222 21 30 25",
         website: "www.clinique-espoir.cm",
         distance: "4.1 km",
+        latitude: 3.8952,
+        longitude: 11.5153,
+        lastStockUpdate: "Hier à 17h10",
+        vaccineAvailability: { BCG: "AVAILABLE", Polio: "LOW", DTP: "AVAILABLE", "Hépatite A": "UNKNOWN", Varicelle: "AVAILABLE" },
         vaccineServices: ["BCG", "Polio", "DTP", "Hépatite A", "Varicelle"],
         certifications: ["Accréditation HAS"],
         bedCount: 85,
@@ -80,6 +88,10 @@ const hospitals = [
         phone: "+237 222 28 14 90",
         website: null,
         distance: "5.7 km",
+        latitude: 3.8411,
+        longitude: 11.5347,
+        lastStockUpdate: "Aujourd’hui à 07h45",
+        vaccineAvailability: { BCG: "AVAILABLE", Polio: "AVAILABLE", Rougeole: "AVAILABLE", Tétanos: "LOW" },
         vaccineServices: ["BCG", "Polio", "Rougeole", "Tétanos"],
         certifications: ["Certifié MS Cameroun"],
         bedCount: 120,
@@ -107,6 +119,10 @@ const hospitals = [
         phone: "+237 222 30 15 70",
         website: "www.polyclinique-sf.cm",
         distance: "3.2 km",
+        latitude: 3.8467,
+        longitude: 11.4872,
+        lastStockUpdate: "Aujourd’hui à 09h05",
+        vaccineAvailability: { BCG: "AVAILABLE", Polio: "AVAILABLE", DTP: "AVAILABLE", ROR: "LOW", "Hépatite B": "AVAILABLE", HPV: "UNKNOWN", Rotavirus: "AVAILABLE" },
         vaccineServices: ["BCG", "Polio", "DTP", "ROR", "Hépatite B", "HPV", "Rotavirus"],
         certifications: ["OMS Certified", "Accréditation HAS", "ISO 9001"],
         bedCount: 160,
@@ -136,6 +152,10 @@ interface Hospital {
     phone: string;
     website: string | null;
     distance: string;
+    latitude: number;
+    longitude: number;
+    lastStockUpdate: string;
+    vaccineAvailability: Record<string, "AVAILABLE" | "LOW" | "UNKNOWN">;
     vaccineServices: string[];
     certifications: string[];
     bedCount: number;
@@ -406,11 +426,12 @@ export default function HospitalProfilePage() {
                                             </div>
                                             <div>
                                                 <h3 className="font-black text-slate-800">Vaccins Disponibles</h3>
-                                                <p className="text-xs text-slate-500">{selectedHospital.vaccineServices.length} vaccins au programme</p>
+                                                <p className="text-xs text-slate-500">Disponibilité déclarée · {selectedHospital.lastStockUpdate}</p>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                             {selectedHospital.vaccineServices.map((vac: string, i: number) => {
+                                                const availability = selectedHospital.vaccineAvailability[vac] || "UNKNOWN";
                                                 const colors = [
                                                     "bg-sky-50 text-sky-700 border-sky-100",
                                                     "bg-violet-50 text-violet-700 border-violet-100",
@@ -420,8 +441,11 @@ export default function HospitalProfilePage() {
                                                     "bg-emerald-50 text-emerald-700 border-emerald-100",
                                                 ];
                                                 return (
-                                                    <div key={vac} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold ${colors[i % colors.length]}`}>
-                                                        <CheckCircle size={12} /> {vac}
+                                                    <div key={vac} className={`rounded-xl border px-3 py-2.5 text-xs font-bold ${colors[i % colors.length]}`}>
+                                                        <span className="flex items-center gap-2"><CheckCircle size={12} /> {vac}</span>
+                                                        <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[8px] font-black uppercase ${availability === "AVAILABLE" ? "bg-emerald-100 text-emerald-700" : availability === "LOW" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>
+                                                            {availability === "AVAILABLE" ? "Disponible" : availability === "LOW" ? "Stock faible" : "À confirmer"}
+                                                        </span>
                                                     </div>
                                                 );
                                             })}
@@ -460,15 +484,23 @@ export default function HospitalProfilePage() {
                                         ))}
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                                         <a href={`tel:${selectedHospital.phone}`}
                                             className={`flex items-center justify-center gap-3 py-5 rounded-2xl bg-gradient-to-br ${selectedHospital.gradient} text-white font-black text-sm shadow-xl hover:scale-105 transition-transform`}
                                         >
                                             <Phone size={18} /> Appeler
                                         </a>
-                                        <button className="flex items-center justify-center gap-3 py-5 rounded-2xl bg-white border-2 border-slate-100 text-slate-700 font-black text-sm shadow-sm hover:border-sky-200 hover:text-sky-600 transition-all">
+                                        <a
+                                            href={`https://www.google.com/maps/dir/?api=1&destination=${selectedHospital.latitude},${selectedHospital.longitude}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="flex items-center justify-center gap-3 rounded-2xl bg-sky-50 py-5 text-sm font-black text-sky-700 shadow-sm transition-all hover:bg-sky-100"
+                                        >
+                                            <Navigation size={18} /> Itinéraire
+                                        </a>
+                                        <Link href="/alerts" className="flex items-center justify-center gap-3 py-5 rounded-2xl bg-white border-2 border-slate-100 text-slate-700 font-black text-sm shadow-sm hover:border-sky-200 hover:text-sky-600 transition-all">
                                             <Calendar size={18} /> Prendre RDV
-                                        </button>
+                                        </Link>
                                     </div>
                                 </motion.div>
                             )}

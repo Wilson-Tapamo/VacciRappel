@@ -15,6 +15,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import SyncQueuePanel from "@/components/offline/SyncQueuePanel";
 
 type OfflineStats = {
   cachedPages: number;
@@ -224,15 +225,14 @@ export default function OfflinePage() {
             </ul>
           </section>
 
-          <section className="rounded-[2rem] border border-amber-200 bg-amber-50 p-6">
-            <Cloud size={24} className="text-amber-600" />
-            <p className="mt-3 text-sm font-black text-amber-950">
-              Les modifications nécessitent encore internet.
+          <section className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6">
+            <Cloud size={24} className="text-emerald-600" />
+            <p className="mt-3 text-sm font-black text-emerald-950">
+              Vos validations sont conservées hors ligne.
             </p>
-            <p className="mt-2 text-xs font-medium leading-5 text-amber-900/75">
-              Ajouter un enfant, valider une dose ou modifier un profil n’est pas
-              mis en file d’attente. Cette limite évite une fausse impression de
-              synchronisation.
+            <p className="mt-2 text-xs font-medium leading-5 text-emerald-900/75">
+              Les doses et profils modifiés sans réseau sont chiffrés sur cet appareil,
+              puis synchronisés à la reconnexion avec revue des conflits.
             </p>
           </section>
 
@@ -245,6 +245,7 @@ export default function OfflinePage() {
           </Link>
         </div>
       </div>
+      <SyncQueuePanel />
     </div>
   );
 }

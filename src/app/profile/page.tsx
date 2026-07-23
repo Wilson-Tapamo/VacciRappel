@@ -28,6 +28,8 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Link from "next/link";
 import ChildVaccinationModal from "@/components/dashboard/ChildVaccinationModal";
+import { mutateWithOfflineQueue } from "@/lib/offlineQueue";
+import FamilyActions from "@/components/family/FamilyActions";
 
 
 function cn(...inputs: ClassValue[]) {
@@ -50,6 +52,7 @@ export default function ProfilePage() {
         conditions: ""
     });
     const [isSaving, setIsSaving] = useState(false);
+    const [syncNotice, setSyncNotice] = useState<string | null>(null);
     const [isGrowthModalOpen, setIsGrowthModalOpen] = useState(false);
     const [growthData, setGrowthData] = useState({
         weight: "",
@@ -82,12 +85,13 @@ export default function ProfilePage() {
             reader.onloadend = async () => {
                 const base64 = reader.result as string;
                 try {
-                    const res = await fetch(`/api/children/${activeProfile.id}`, {
+                    const result = await mutateWithOfflineQueue({
+                        url: `/api/children/${activeProfile.id}`,
                         method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ image: base64 }),
+                        body: { image: base64, baseVersion: activeProfile.version },
                     });
-                    if (res.ok) fetchChildren();
+                    if (result.queued) setSyncNotice("Photo enregistrée hors ligne et chiffrée sur cet appareil.");
+                    else if (result.ok) fetchChildren();
                 } catch (error) {
                     console.error("Failed to update image", error);
                 }
@@ -100,12 +104,17 @@ export default function ProfilePage() {
         if (!activeProfile) return;
         setIsSaving(true);
         try {
-            const res = await fetch(`/api/children/${activeProfile.id}`, {
+            const result = await mutateWithOfflineQueue({
+                url: `/api/children/${activeProfile.id}`,
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(editData),
+                body: { ...editData, baseVersion: activeProfile.version },
             });
-            if (res.ok) {
+            if (result.queued) {
+                setSyncNotice(result.conflict
+                    ? "Conflit détecté : ouvrez le mode hors ligne pour choisir la version à conserver."
+                    : "Profil enregistré hors ligne. La synchronisation se fera automatiquement.");
+                setIsEditModalOpen(false);
+            } else if (result.ok) {
                 fetchChildren();
                 setIsEditModalOpen(false);
             }
@@ -295,6 +304,12 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
+                        {syncNotice && (
+                            <Link href="/offline" className="block rounded-2xl border border-sky-100 bg-sky-50 p-4 text-xs font-bold leading-5 text-sky-900">
+                                {syncNotice} Voir la synchronisation.
+                            </Link>
+                        )}
+
                         <button 
                             onClick={openEditModal}
                             className="w-full py-6 px-8 rounded-[2.5rem] bg-white border border-slate-200 text-slate-700 font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 shadow-xl shadow-slate-200/50 hover:bg-slate-50 hover:-translate-y-1 active:translate-y-0 transition-all group"
@@ -302,6 +317,12 @@ export default function ProfilePage() {
                             <Edit2 size={18} className="text-sky-500" />
                             Modifier les informations
                         </button>
+
+                        <FamilyActions
+                            childId={activeProfile.id}
+                            childName={activeProfile.name}
+                            isOwner={!activeProfile.familyAccess?.length}
+                        />
 
                         <Link href="/scan" className="w-full py-6 px-8 rounded-[2.5rem] bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 shadow-xl shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-1 active:translate-y-0 transition-all group">
                             <ScanLine size={18} className="animate-pulse" />
