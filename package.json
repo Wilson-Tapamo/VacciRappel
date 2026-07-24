@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:migrate:deploy": "prisma migrate deploy",
-    "db:seed:schedule": "tsx prisma/seed-routine-schedule.ts"
+    "db:seed:schedule": "tsx prisma/seed-routine-schedule.ts",
+    "db:migrate:vaccine-records": "prisma db execute --schema prisma/schema.prisma --file prisma/data-migrations/20260724_cameroon_pev_2026.sql"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",

@@ -10,11 +10,42 @@ import {
     Lightbulb,
     Calendar,
     ArrowRight,
-    Loader2
+    Loader2,
+    ExternalLink
 } from "lucide-react";
 
+type ProtectionItem = {
+    icon: string;
+    name: string;
+    description: string;
+};
+
+type VaccineDetails = {
+    name: string;
+    protection?: string | null;
+    importance?: string | null;
+    description?: string | null;
+    longDescription?: string | null;
+    didYouKnow?: string | null;
+    recommendedAge?: number;
+    recommendedAgeDays?: number | null;
+    doseNumber?: number;
+    benefits?: string[];
+    sideEffectsCommon?: string[];
+    sideEffectsRare?: string[];
+    fullProtectionList?: ProtectionItem[] | null;
+    eligibilityRules?: {
+        totalDoses?: number;
+        scheduleAges?: string[];
+        schedule?: "ROUTINE" | "TARGETED" | "ADOLESCENT";
+        targetNote?: string;
+        sourceLabel?: string;
+        sourceUrl?: string;
+    } | null;
+};
+
 interface VaccineDetailModalProps {
-    vaccine: any;
+    vaccine: VaccineDetails | null | undefined;
     isOpen: boolean;
     onClose: () => void;
     actionLabel?: string;
@@ -25,6 +56,34 @@ interface VaccineDetailModalProps {
 
 export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLabel, onAction, actionDisabled, actionLoading }: VaccineDetailModalProps) {
     if (!vaccine) return null;
+
+    const scheduleRules = (vaccine.eligibilityRules || {}) as {
+        totalDoses?: number;
+        scheduleAges?: string[];
+        schedule?: "ROUTINE" | "TARGETED" | "ADOLESCENT";
+        targetNote?: string;
+        sourceLabel?: string;
+        sourceUrl?: string;
+    };
+    const ageLabel = (() => {
+        const days = vaccine.recommendedAgeDays;
+        if (days === 0) return "Naissance";
+        if (days === 42) return "6 semaines";
+        if (days === 70) return "10 semaines";
+        if (days === 98) return "14 semaines";
+        if (days === 180) return "6 mois";
+        if (days === 210) return "7 mois";
+        if (days === 270) return "9 mois";
+        if (days === 450) return "15 mois";
+        if (days === 730) return "24 mois";
+        if (days === 9 * 365) return "9 à 14 ans";
+        return vaccine.recommendedAge === 0 ? "Naissance" : `${vaccine.recommendedAge} mois`;
+    })();
+    const doseLabel = vaccine.doseNumber === 0
+        ? "Dose naissance"
+        : scheduleRules.totalDoses
+            ? `Dose ${vaccine.doseNumber} sur ${scheduleRules.totalDoses}`
+            : `Dose ${vaccine.doseNumber || 1}`;
 
     return (
         <AnimatePresence>
@@ -79,7 +138,7 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLab
                                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center gap-2">
                                     <Calendar className="text-sky-500" size={20} />
                                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Âge Recommandé</span>
-                                    <span className="text-lg font-black text-slate-800">{vaccine.recommendedAge === 0 ? "Naissance" : `${vaccine.recommendedAge} mois`}</span>
+                                    <span className="text-lg font-black text-slate-800">{ageLabel}</span>
                                 </div>
                                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center gap-2">
                                     <ShieldCheck className="text-emerald-500" size={20} />
@@ -89,9 +148,39 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLab
                                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center gap-2 col-span-2 md:col-span-1">
                                     <Info className="text-indigo-500" size={20} />
                                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Doses</span>
-                                    <span className="text-lg font-black text-slate-800">Séquence PEV</span>
+                                    <span className="text-lg font-black text-slate-800">{doseLabel}</span>
                                 </div>
                             </div>
+
+                            {scheduleRules.scheduleAges && scheduleRules.scheduleAges.length > 0 && (
+                                <div className="rounded-3xl border border-sky-100 bg-sky-50/70 p-5">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-700">
+                                            Calendrier de la série
+                                        </p>
+                                        {scheduleRules.schedule !== "ROUTINE" && (
+                                            <span className="rounded-full bg-amber-100 px-3 py-1 text-[9px] font-black uppercase tracking-wider text-amber-800">
+                                                Éligibilité à confirmer
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {scheduleRules.scheduleAges.map((age, index) => (
+                                            <span
+                                                key={`${age}-${index}`}
+                                                className="rounded-full border border-white bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm"
+                                            >
+                                                {index + 1}. {age}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    {scheduleRules.targetNote && (
+                                        <p className="mt-3 text-xs font-medium leading-5 text-amber-800">
+                                            {scheduleRules.targetNote}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Two Columns Section */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -104,8 +193,8 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLab
                                         <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Protège contre</h3>
                                     </div>
                                     <div className="space-y-3">
-                                        {(vaccine.fullProtectionList as any[])?.length > 0 ? (
-                                            (vaccine.fullProtectionList as any[]).map((item, i) => (
+                                        {vaccine.fullProtectionList && vaccine.fullProtectionList.length > 0 ? (
+                                            vaccine.fullProtectionList.map((item, i) => (
                                                 <div key={i} className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                                                     <div className="text-2xl">{item.icon}</div>
                                                     <div>
@@ -144,7 +233,7 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLab
                             </div>
 
                             {/* Importance Section */}
-                            <div className="p-8 md:p-10 rounded-[2rem] bg-gradient-to-br from-rose-400 via-rose-500 to-rose-600 text-white shadow-xl shadow-rose-100 relative overflow-hidden group">
+                            <div className="p-8 md:p-10 rounded-[2rem] bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-500 text-white shadow-xl shadow-teal-100 relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/20 transition-all" />
                                 <div className="relative z-10 space-y-4">
                                     <div className="flex items-center gap-3">
@@ -164,6 +253,17 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLab
                                                 <p className="text-sm italic text-white/90">{vaccine.didYouKnow}</p>
                                             </div>
                                         </div>
+                                    )}
+                                    {scheduleRules.sourceUrl && (
+                                        <a
+                                            href={scheduleRules.sourceUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white transition hover:bg-white/25"
+                                        >
+                                            Source officielle
+                                            <ExternalLink size={13} />
+                                        </a>
                                     )}
                                 </div>
                             </div>

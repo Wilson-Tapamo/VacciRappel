@@ -74,7 +74,13 @@ export async function POST(req: Request) {
       const records = vaccines
         .filter(
           (vaccine) =>
-            !preciseScheduleAvailable || vaccine.recommendedAgeDays !== null,
+            !preciseScheduleAvailable ||
+            (vaccine.recommendedAgeDays !== null &&
+              (
+                vaccine.eligibilityRules as {
+                  schedule?: string;
+                } | null
+              )?.schedule === "ROUTINE"),
         )
         .map((vaccine) => {
           const date = new Date(birthDate);

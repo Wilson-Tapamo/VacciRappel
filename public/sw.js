@@ -1,4 +1,4 @@
-const VERSION = "vacci-rappel-v5";
+const VERSION = "vacci-rappel-v6";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const DATA_CACHE = `${VERSION}-data`;

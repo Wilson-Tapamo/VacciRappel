@@ -6,6 +6,7 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import PwaManager from "@/components/pwa/PwaManager";
 import { cn } from "@/lib/utils";
 import MobileHeader from "@/components/MobileHeader";
+import AppSplashScreen from "@/components/AppSplashScreen";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,6 +14,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <AppSplashScreen />
       <PwaManager />
 
       <div className="bg-blob bg-sky-100 top-[-100px] right-[-100px] animate-pulse-slow" />

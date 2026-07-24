@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    MapPin, Star, Clock, Phone, Globe, ChevronRight, ChevronLeft,
-    Shield, Award, Users, Calendar, Activity, CheckCircle,
-    Building2, Heart, Stethoscope, Baby, ArrowLeft, ExternalLink, Filter,
-    Search, Navigation, X, Info
+    MapPin, Star, Clock, Phone, Globe, ChevronRight,
+    Shield, Calendar, Activity, CheckCircle,
+    Building2, Heart, Stethoscope, Baby, ArrowLeft,
+    Search, Navigation, Info
 } from "lucide-react";
 import Link from "next/link";
 import MobileHospitalTabs from "@/components/MobileHospitalTabs";
@@ -31,6 +31,7 @@ const hospitals: Hospital[] = [
         lastStockUpdate: "Aujourd’hui à 08h30",
         vaccineAvailability: { BCG: "AVAILABLE", Polio: "AVAILABLE", Rougeole: "LOW", DTP: "AVAILABLE", "Hépatite B": "AVAILABLE", "Méningite A": "UNKNOWN" },
         vaccineServices: ["BCG", "Polio", "Rougeole", "DTP", "Hépatite B", "Méningite A"],
+        vaccineSessionDays: {},
         certifications: ["OMS Certified", "ISO 9001"],
         bedCount: 350,
         doctorCount: 42,
@@ -62,6 +63,7 @@ const hospitals: Hospital[] = [
         lastStockUpdate: "Hier à 17h10",
         vaccineAvailability: { BCG: "AVAILABLE", Polio: "LOW", DTP: "AVAILABLE", "Hépatite A": "UNKNOWN", Varicelle: "AVAILABLE" },
         vaccineServices: ["BCG", "Polio", "DTP", "Hépatite A", "Varicelle"],
+        vaccineSessionDays: {},
         certifications: ["Accréditation HAS"],
         bedCount: 85,
         doctorCount: 18,
@@ -93,6 +95,7 @@ const hospitals: Hospital[] = [
         lastStockUpdate: "Aujourd’hui à 07h45",
         vaccineAvailability: { BCG: "AVAILABLE", Polio: "AVAILABLE", Rougeole: "AVAILABLE", Tétanos: "LOW" },
         vaccineServices: ["BCG", "Polio", "Rougeole", "Tétanos"],
+        vaccineSessionDays: {},
         certifications: ["Certifié MS Cameroun"],
         bedCount: 120,
         doctorCount: 12,
@@ -124,6 +127,7 @@ const hospitals: Hospital[] = [
         lastStockUpdate: "Aujourd’hui à 09h05",
         vaccineAvailability: { BCG: "AVAILABLE", Polio: "AVAILABLE", DTP: "AVAILABLE", ROR: "LOW", "Hépatite B": "AVAILABLE", HPV: "UNKNOWN", Rotavirus: "AVAILABLE" },
         vaccineServices: ["BCG", "Polio", "DTP", "ROR", "Hépatite B", "HPV", "Rotavirus"],
+        vaccineSessionDays: {},
         certifications: ["OMS Certified", "Accréditation HAS", "ISO 9001"],
         bedCount: 160,
         doctorCount: 28,
@@ -157,6 +161,7 @@ interface Hospital {
     lastStockUpdate: string;
     vaccineAvailability: Record<string, "AVAILABLE" | "LOW" | "UNKNOWN">;
     vaccineServices: string[];
+    vaccineSessionDays: Record<string, string>;
     certifications: string[];
     bedCount: number;
     doctorCount: number;
@@ -171,12 +176,20 @@ interface Hospital {
     nextAvailable: string;
 }
 
-const colorMap: Record<string, any> = {
-    sky:    { badge: "bg-sky-100 text-sky-700", border: "border-sky-200", ring: "ring-sky-500", dot: "bg-sky-500" },
-    purple: { badge: "bg-violet-100 text-violet-700", border: "border-violet-200", ring: "ring-violet-500", dot: "bg-violet-500" },
-    teal:   { badge: "bg-teal-100 text-teal-700", border: "border-teal-200", ring: "ring-teal-500", dot: "bg-teal-500" },
-    coral:  { badge: "bg-rose-100 text-rose-700", border: "border-rose-200", ring: "ring-rose-500", dot: "bg-rose-500" },
+const colorMap: Record<string, { border: string; ring: string; badge: string }> = {
+    sky: { border: "border-sky-200", ring: "ring-sky-500", badge: "bg-sky-100 text-sky-700" },
+    purple: { border: "border-violet-200", ring: "ring-violet-500", badge: "bg-violet-100 text-violet-700" },
+    teal: { border: "border-teal-200", ring: "ring-teal-500", badge: "bg-teal-100 text-teal-700" },
+    coral: { border: "border-rose-200", ring: "ring-rose-500", badge: "bg-rose-100 text-rose-700" },
 };
+
+const lyophilizedVaccines = new Set([
+    "BCG",
+    "Rougeole",
+    "ROR",
+    "Fièvre jaune",
+    "Méningite A",
+]);
 
 export default function HospitalProfilePage() {
     const [selectedHospital, setSelectedHospital] = useState<Hospital>(hospitals[0]);
@@ -187,8 +200,6 @@ export default function HospitalProfilePage() {
         h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         h.specialty.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
-    const c = colorMap[selectedHospital.color];
 
     const hospitalContent = (
         <div className="space-y-8 pb-10">
@@ -227,7 +238,7 @@ export default function HospitalProfilePage() {
                         { label: "Centres partenaires", value: "24+", icon: Building2, color: "text-sky-600", bg: "bg-white/70" },
                         { label: "Vaccins disponibles", value: "18", icon: Shield, color: "text-violet-600", bg: "bg-white/70" },
                         { label: "Enfants vaccinés", value: "12,400+", icon: Baby, color: "text-teal-600", bg: "bg-white/70" },
-                    ].map((stat: any) => (
+                    ].map((stat) => (
                         <div key={stat.label} className={`${stat.bg} backdrop-blur-sm rounded-2xl px-5 py-3 flex items-center gap-3 shadow-sm border border-white/80`}>
                             <stat.icon className={stat.color} size={20} />
                             <div>
@@ -359,7 +370,7 @@ export default function HospitalProfilePage() {
                                 { id: "overview", label: "Aperçu" },
                                 { id: "vaccines", label: "Vaccins" },
                                 { id: "contact", label: "Contact & RDV" }
-                            ].map((tab: any) => (
+                            ].map((tab) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
@@ -394,7 +405,7 @@ export default function HospitalProfilePage() {
                                             { icon: Navigation, label: "Distance", value: selectedHospital.distance, color: "text-sky-600", bg: "bg-sky-50" },
                                             { icon: Activity, label: "Attente", value: selectedHospital.waitTime, color: "text-teal-600", bg: "bg-teal-50" },
                                             { icon: Calendar, label: "Prochain RDV", value: selectedHospital.nextAvailable, color: "text-violet-600", bg: "bg-violet-50" },
-                                        ].map((item: any) => (
+                                        ].map((item) => (
                                             <div key={item.label} className={`${item.bg} rounded-2xl p-5 space-y-2`}>
                                                 <item.icon className={item.color} size={20} />
                                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{item.label}</p>
@@ -430,8 +441,10 @@ export default function HospitalProfilePage() {
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                            {selectedHospital.vaccineServices.map((vac: string, i: number) => {
-                                                const availability = selectedHospital.vaccineAvailability[vac] || "UNKNOWN";
+                                             {selectedHospital.vaccineServices.map((vac: string, i: number) => {
+                                                 const availability = selectedHospital.vaccineAvailability[vac] || "UNKNOWN";
+                                                 const isLyophilized = lyophilizedVaccines.has(vac);
+                                                 const sessionDay = selectedHospital.vaccineSessionDays[vac];
                                                 const colors = [
                                                     "bg-sky-50 text-sky-700 border-sky-100",
                                                     "bg-violet-50 text-violet-700 border-violet-100",
@@ -443,14 +456,26 @@ export default function HospitalProfilePage() {
                                                 return (
                                                     <div key={vac} className={`rounded-xl border px-3 py-2.5 text-xs font-bold ${colors[i % colors.length]}`}>
                                                         <span className="flex items-center gap-2"><CheckCircle size={12} /> {vac}</span>
-                                                        <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[8px] font-black uppercase ${availability === "AVAILABLE" ? "bg-emerald-100 text-emerald-700" : availability === "LOW" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>
-                                                            {availability === "AVAILABLE" ? "Disponible" : availability === "LOW" ? "Stock faible" : "À confirmer"}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
+                                                         <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[8px] font-black uppercase ${availability === "AVAILABLE" ? "bg-emerald-100 text-emerald-700" : availability === "LOW" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>
+                                                             {availability === "AVAILABLE" ? "Disponible" : availability === "LOW" ? "Stock faible" : "À confirmer"}
+                                                         </span>
+                                                         {isLyophilized && (
+                                                             <span className="mt-2 flex items-start gap-1.5 rounded-lg bg-white/80 px-2 py-1.5 text-[9px] font-black leading-4 text-slate-700">
+                                                                 <Calendar size={11} className="mt-0.5 shrink-0 text-violet-500" />
+                                                                 {sessionDay
+                                                                     ? `Séance : ${sessionDay}`
+                                                                     : "Vaccin lyophilisé · jour à confirmer"}
+                                                             </span>
+                                                         )}
+                                                     </div>
+                                                 );
+                                             })}
+                                         </div>
+                                         <p className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-bold leading-4 text-amber-800">
+                                             <Info size={14} className="mt-0.5 shrink-0" />
+                                             Les jours affichés concernent surtout les vaccins lyophilisés. Planning indicatif : appelez le centre avant de vous déplacer.
+                                         </p>
+                                     </div>
 
                                     <div className={`p-6 rounded-2xl bg-gradient-to-br ${selectedHospital.gradient} text-white relative overflow-hidden`}>
                                         <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl" />
@@ -471,7 +496,7 @@ export default function HospitalProfilePage() {
                                             { icon: MapPin, label: "Adresse", value: selectedHospital.address, color: "text-sky-600", bg: "bg-sky-50" },
                                             { icon: Phone, label: "Téléphone", value: selectedHospital.phone, color: "text-teal-600", bg: "bg-teal-50" },
                                             ...(selectedHospital.website ? [{ icon: Globe, label: "Site Web", value: selectedHospital.website, color: "text-violet-600", bg: "bg-violet-50" }] : []),
-                                        ].map((item: any) => (
+                                        ].map((item) => (
                                             <div key={item.label} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
                                                 <div className={`w-10 h-10 ${item.bg} rounded-xl flex items-center justify-center`}>
                                                     <item.icon className={item.color} size={18} />
