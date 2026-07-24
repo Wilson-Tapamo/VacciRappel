@@ -49,9 +49,16 @@ export default function PwaManager() {
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch((error) => {
-        console.error("Service worker registration failed:", error);
-      });
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((registration) => {
+          const worker =
+            registration.active || registration.waiting || registration.installing;
+          worker?.postMessage({ type: "CACHE_APP" });
+        })
+        .catch((error) => {
+          console.error("Service worker registration failed:", error);
+        });
     }
 
     const handleInstallPrompt = (event: Event) => {
@@ -118,7 +125,7 @@ export default function PwaManager() {
         <div className="fixed top-3 left-1/2 z-[70] -translate-x-1/2 rounded-full bg-slate-950 px-4 py-2 text-xs font-bold text-white shadow-xl">
           <span className="flex items-center gap-2">
             <WifiOff size={14} />
-            Hors ligne · les données déjà consultées restent disponibles
+            Hors ligne · pages accessibles et actions synchronisées au retour du réseau
           </span>
         </div>
       )}

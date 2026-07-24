@@ -9,16 +9,21 @@ import {
     AlertTriangle,
     Lightbulb,
     Calendar,
-    ArrowRight
+    ArrowRight,
+    Loader2
 } from "lucide-react";
 
 interface VaccineDetailModalProps {
     vaccine: any;
     isOpen: boolean;
     onClose: () => void;
+    actionLabel?: string;
+    onAction?: () => void;
+    actionDisabled?: boolean;
+    actionLoading?: boolean;
 }
 
-export default function VaccineDetailModal({ vaccine, isOpen, onClose }: VaccineDetailModalProps) {
+export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLabel, onAction, actionDisabled, actionLoading }: VaccineDetailModalProps) {
     if (!vaccine) return null;
 
     return (
@@ -197,11 +202,21 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose }: Vaccine
 
                             {/* Action */}
                             <div className="pt-6 pb-2">
+                                {onAction && (
+                                    <button
+                                        onClick={onAction}
+                                        disabled={actionDisabled || actionLoading}
+                                        className="mb-3 flex w-full items-center justify-center gap-3 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 py-5 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-200 transition-transform enabled:hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                                        {actionLoading ? "Enregistrement…" : actionLabel || "Marquer fait"}
+                                    </button>
+                                )}
                                 <button
                                     onClick={onClose}
                                     className="w-full py-5 gradient-primary text-white rounded-3xl font-black uppercase tracking-widest text-xs shadow-xl shadow-sky-400/30 flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform active:scale-95"
                                 >
-                                    J'ai compris
+                                    {onAction ? "Fermer" : "J'ai compris"}
                                     <ArrowRight size={18} />
                                 </button>
                             </div>

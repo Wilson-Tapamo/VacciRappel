@@ -30,6 +30,11 @@ import Link from "next/link";
 import ChildVaccinationModal from "@/components/dashboard/ChildVaccinationModal";
 import { mutateWithOfflineQueue } from "@/lib/offlineQueue";
 import FamilyActions from "@/components/family/FamilyActions";
+import {
+    getCachedChildren,
+    loadChildren,
+    updateCachedVaccination,
+} from "@/lib/childrenStore";
 
 
 function cn(...inputs: ClassValue[]) {
@@ -37,7 +42,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export default function ProfilePage() {
-    const [children, setChildren] = useState<any[]>([]);
+    const [children, setChildren] = useState<any[]>(getCachedChildren() || []);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -61,10 +66,13 @@ export default function ProfilePage() {
     });
 
     const fetchChildren = () => {
-        fetch("/api/children")
-            .then(res => res.json())
+        loadChildren(true)
             .then(data => {
                 setChildren(data);
+                setLoading(false);
+            })
+            .catch(() => {
+                setChildren(getCachedChildren() || []);
                 setLoading(false);
             });
     };
@@ -129,13 +137,28 @@ export default function ProfilePage() {
         if (!activeProfile) return;
         setIsSaving(true);
         try {
-            const res = await fetch(`/api/children/${activeProfile.id}/growth`, {
+            const result = await mutateWithOfflineQueue({
+                url: `/api/children/${activeProfile.id}/growth`,
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(growthData),
+                body: growthData,
             });
-            if (res.ok) {
-                fetchChildren();
+            if (result.ok || result.queued) {
+                if (result.queued) {
+                    setSyncNotice("Mesure enregistrée hors ligne. Elle sera synchronisée automatiquement.");
+                    setChildren((current) => current.map((child) =>
+                        child.id === activeProfile.id
+                            ? {
+                                ...child,
+                                growthRecords: [
+                                    ...(child.growthRecords || []),
+                                    { ...growthData, id: `local-${crypto.randomUUID()}` },
+                                ],
+                            }
+                            : child,
+                    ));
+                } else {
+                    fetchChildren();
+                }
                 setIsGrowthModalOpen(false);
                 setGrowthData({
                     weight: "",
@@ -305,9 +328,9 @@ export default function ProfilePage() {
                         </div>
 
                         {syncNotice && (
-                            <Link href="/offline" className="block rounded-2xl border border-sky-100 bg-sky-50 p-4 text-xs font-bold leading-5 text-sky-900">
-                                {syncNotice} Voir la synchronisation.
-                            </Link>
+                            <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4 text-xs font-bold leading-5 text-sky-900">
+                                {syncNotice}
+                            </div>
                         )}
 
                         <button 
@@ -729,8 +752,9 @@ export default function ProfilePage() {
                 child={activeProfile}
                 isOpen={isCalendarOpen}
                 onClose={() => setIsCalendarOpen(false)}
-                onUpdate={() => {
-                    fetchChildren();
+                onUpdate={(recordId, status) => {
+                    updateCachedVaccination(recordId, status);
+                    setChildren(getCachedChildren() || []);
                 }}
             />
         </div>

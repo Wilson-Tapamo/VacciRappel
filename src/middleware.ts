@@ -16,6 +16,6 @@ export const config = {
          * - favicon.ico (favicon file)
          * - auth (authentication pages: login, register)
          */
-        "/((?!api|_next/static|_next/image|favicon.ico|favicon.png|apple-touch-icon.png|icon.png|icons|brand|documents|manifest.webmanifest|sw.js|offline|calendar|auth).*)",
+        "/((?!api|_next/static|_next/image|favicon.ico|favicon.png|apple-touch-icon.png|icon.png|icons|brand|documents|manifest.webmanifest|sw.js|calendar|auth).*)",
     ],
 };

@@ -17,8 +17,7 @@ import {
     HelpCircle,
     Settings,
     PlusCircle,
-    Download,
-    WifiOff
+    Download
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,7 +33,6 @@ const navItems = [
     { name: "Profil Enfant", href: "/profile", icon: User },
     { name: "Alertes", href: "/alerts", icon: Bell },
     { name: "Support IA", href: "/support", icon: HelpCircle },
-    { name: "Mode hors ligne", href: "/offline", icon: WifiOff },
 ];
 
 export default function Sidebar() {

@@ -1,20 +1,43 @@
-const VERSION = "vacci-rappel-v1";
+const VERSION = "vacci-rappel-v3";
 const STATIC_CACHE = `${VERSION}-static`;
-const RUNTIME_CACHE = `${VERSION}-runtime`;
+const PAGE_CACHE = `${VERSION}-pages`;
 const DATA_CACHE = `${VERSION}-data`;
 
-const PRECACHE = [
-  "/offline",
+const APP_ROUTES = [
+  "/",
+  "/alerts",
   "/calendar",
+  "/children/add",
+  "/hospitals",
+  "/map",
+  "/profile",
+  "/scan",
+  "/support",
+  "/vaccine-library",
+  "/vaccines",
+];
+
+const STATIC_ASSETS = [
   "/manifest.webmanifest",
   "/brand/logo-mark.png",
+  "/brand/logo-wordmark.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/documents/calendrier-rattrapage-pev-2024.pdf",
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE)));
+  event.waitUntil(
+    Promise.allSettled(
+      [...APP_ROUTES, ...STATIC_ASSETS].map(async (url) => {
+        const cache = await caches.open(
+          APP_ROUTES.includes(url) ? PAGE_CACHE : STATIC_CACHE,
+        );
+        const response = await fetch(url, { credentials: "include" });
+        if (response.ok) await cache.put(url, response);
+      }),
+    ),
+  );
   self.skipWaiting();
 });
 
@@ -25,7 +48,9 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => ![STATIC_CACHE, RUNTIME_CACHE, DATA_CACHE].includes(key))
+            .filter(
+              (key) => ![STATIC_CACHE, PAGE_CACHE, DATA_CACHE].includes(key),
+            )
             .map((key) => caches.delete(key)),
         ),
       ),
@@ -33,11 +58,21 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-async function networkFirst(request, cacheName, fallback) {
+async function fetchWithTimeout(request, timeoutMs = 1800) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(request, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function networkFirst(request, cacheName, fallback, timeoutMs = 1800) {
   const cache = await caches.open(cacheName);
   try {
-    const response = await fetch(request);
-    if (response.ok) cache.put(request, response.clone());
+    const response = await fetchWithTimeout(request, timeoutMs);
+    if (response.ok) await cache.put(request, response.clone());
     return response;
   } catch {
     const cached = await cache.match(request);
@@ -46,12 +81,38 @@ async function networkFirst(request, cacheName, fallback) {
   }
 }
 
+async function pageStaleWhileRevalidate(event) {
+  const request = event.request;
+  const cache = await caches.open(PAGE_CACHE);
+  const cached = await cache.match(request, { ignoreSearch: true });
+  const pathname = new URL(request.url).pathname;
+  const update = fetch(request)
+    .then(async (response) => {
+      if (response.ok) await cache.put(pathname, response.clone());
+      return response;
+    })
+    .catch(() => null);
+
+  if (cached) {
+    event.waitUntil(update);
+    return cached;
+  }
+
+  const response = await update;
+  if (response) return response;
+  return (
+    (await cache.match(pathname)) ||
+    (await cache.match("/")) ||
+    new Response("Application indisponible", { status: 503 })
+  );
+}
+
 async function cacheFirst(request) {
   const cache = await caches.open(STATIC_CACHE);
-  const cached = await cache.match(request);
+  const cached = await cache.match(request, { ignoreSearch: true });
   if (cached) return cached;
   const response = await fetch(request);
-  if (response.ok) cache.put(request, response.clone());
+  if (response.ok) await cache.put(request, response.clone());
   return response;
 }
 
@@ -63,27 +124,28 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(
-      networkFirst(request, RUNTIME_CACHE, async () => {
-        const cachedPage = await caches.match(request);
-        return cachedPage || caches.match("/offline");
-      }),
-    );
+    event.respondWith(pageStaleWhileRevalidate(event));
     return;
   }
 
-  if (url.pathname === "/api/children" || url.pathname === "/api/vaccines") {
+  if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       networkFirst(
         request,
         DATA_CACHE,
         () =>
-          new Response("[]", {
-            headers: {
-              "Content-Type": "application/json",
-              "X-VacciRappel-Offline": "true",
+          new Response(
+            url.pathname === "/api/children" || url.pathname === "/api/vaccines"
+              ? "[]"
+              : "{}",
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "X-VacciRappel-Offline": "true",
+              },
             },
-          }),
+          ),
+        url.pathname === "/api/children" ? 1200 : 1800,
       ),
     );
     return;
@@ -98,6 +160,21 @@ self.addEventListener("fetch", (event) => {
   ) {
     event.respondWith(cacheFirst(request));
   }
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type !== "CACHE_APP") return;
+  event.waitUntil(
+    Promise.allSettled(
+      APP_ROUTES.map(async (url) => {
+        const response = await fetch(url, { credentials: "include" });
+        if (response.ok) {
+          const cache = await caches.open(PAGE_CACHE);
+          await cache.put(url, response);
+        }
+      }),
+    ),
+  );
 });
 
 self.addEventListener("push", (event) => {

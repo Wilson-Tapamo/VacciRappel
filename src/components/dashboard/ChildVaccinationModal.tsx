@@ -17,7 +17,7 @@ interface ChildVaccinationModalProps {
     child: any;
     isOpen: boolean;
     onClose: () => void;
-    onUpdate: () => void;
+    onUpdate: (recordId: string, status: "DONE" | "PENDING") => void;
 }
 
 export default function ChildVaccinationModal({ child, isOpen, onClose, onUpdate }: ChildVaccinationModalProps) {
@@ -39,9 +39,8 @@ export default function ChildVaccinationModal({ child, isOpen, onClose, onUpdate
                 setNotice(result.conflict
                     ? "Conflit détecté : choisissez la version à conserver dans le mode hors ligne."
                     : "Modification chiffrée sur cet appareil. Elle sera synchronisée à la reconnexion.");
-            } else if (result.ok) {
-                onUpdate();
             }
+            if (result.ok || result.queued) onUpdate(recordId, newStatus);
         } catch (error) {
             console.error(error);
         } finally {

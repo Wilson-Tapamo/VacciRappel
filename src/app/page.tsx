@@ -25,34 +25,55 @@ import RecentAlerts from "@/components/dashboard/RecentAlerts";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import ChildVaccinationModal from "@/components/dashboard/ChildVaccinationModal";
+import DashboardInsightsModal, {
+  DashboardVaccination,
+} from "@/components/dashboard/DashboardInsightsModal";
+import { mutateWithOfflineQueue } from "@/lib/offlineQueue";
+import {
+  getCachedChildren,
+  loadChildren,
+  updateCachedVaccination,
+} from "@/lib/childrenStore";
+
+type DashboardModal = "next" | "alerts" | "progress" | null;
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
-  const [children, setChildren] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedChildren = getCachedChildren();
+  const [children, setChildren] = useState<any[]>(cachedChildren || []);
+  const [loading, setLoading] = useState(!cachedChildren);
   const [selectedChildForCalendar, setSelectedChildForCalendar] = useState<any>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [dashboardModal, setDashboardModal] = useState<DashboardModal>(null);
+  const [updatingVaccination, setUpdatingVaccination] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "authenticated") {
-      fetch("/api/children")
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            setChildren(data);
-          } else {
-            console.error("API Error:", data);
-            setChildren([]);
-          }
-          setLoading(false);
-        })
+      loadChildren()
+        .then(setChildren)
         .catch(err => {
           console.error("Fetch Error:", err);
-          setChildren([]);
+          setChildren(getCachedChildren() || []);
           setLoading(false);
-        });
+        })
+        .finally(() => setLoading(false));
     }
   }, [status]);
+
+  useEffect(() => {
+    const syncChildren = (event: Event) => {
+      const nextChildren = (event as CustomEvent<any[]>).detail;
+      if (!Array.isArray(nextChildren)) return;
+      setChildren(nextChildren);
+      setSelectedChildForCalendar((selected: any) =>
+        selected
+          ? nextChildren.find((child) => child.id === selected.id) || selected
+          : selected,
+      );
+    };
+    window.addEventListener("vacci:children-changed", syncChildren);
+    return () => window.removeEventListener("vacci:children-changed", syncChildren);
+  }, []);
 
   if (status === "loading" || loading) {
     return (
@@ -87,62 +108,99 @@ export default function Dashboard() {
   }
 
 
-  const refreshData = () => {
-    fetch("/api/children")
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setChildren(data);
-        }
-      });
-  };
-
   const hasChildren = children.length > 0;
 
-  // Calculate real stats
-  // Calculate real stats
-  const allVaccinations = children.flatMap(child => child.vaccinations || []);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const allVaccinations: DashboardVaccination[] = children.flatMap((child) =>
+    (child.vaccinations || []).map((vaccination: any) => {
+      const vaccinationDate = new Date(vaccination.date);
+      vaccinationDate.setHours(0, 0, 0, 0);
+      return {
+        ...vaccination,
+        childId: child.id,
+        childName: child.name,
+        childImage: child.image,
+        daysUntil: Math.round(
+          (vaccinationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+        ),
+      };
+    }),
+  );
   const totalVaccinations = allVaccinations.length;
-  const doneVaccinations = allVaccinations.filter((v: any) => v.status === 'DONE').length;
+  const doneVaccinations = allVaccinations.filter((v) => v.status === "DONE").length;
 
   const vaccinationRate = totalVaccinations > 0
     ? Math.round((doneVaccinations / totalVaccinations) * 100)
     : 0;
 
-  // Find the single next vaccine (closest in the future and pending)
   const pendingVaccinations = allVaccinations
-    .filter((v: any) => v.status !== 'DONE')
-    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .filter((vaccination) => vaccination.status !== "DONE")
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const nextVaccination = pendingVaccinations[0];
   let nextVaccineInfo = { name: "Aucun", days: 0 };
 
   if (nextVaccination) {
-    const nextDate = new Date(nextVaccination.date);
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const diffTime = nextDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
     nextVaccineInfo = {
       name: nextVaccination.vaccine?.name || "Vaccin",
-      days: diffDays
+      days: nextVaccination.daysUntil,
     };
   }
 
-  const upcomingRemindersCount = children.reduce((acc, child) => {
-    const upcoming = child.vaccinations?.filter((v: any) => {
-      const date = new Date(v.date);
-      date.setHours(0, 0, 0, 0);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(now.getDate() + 30);
-      thirtyDaysFromNow.setHours(23, 59, 59, 999);
-      return v.status !== 'DONE' && date >= now && date <= thirtyDaysFromNow;
-    })?.length || 0;
-    return acc + upcoming;
-  }, 0);
+  const alertVaccinations = pendingVaccinations.filter(
+    (vaccination) => vaccination.daysUntil <= 30,
+  );
+  const upcomingRemindersCount = alertVaccinations.length;
+
+  const nextReminderTone =
+    !nextVaccination
+      ? ""
+      : nextVaccination.daysUntil < 0
+        ? "!bg-rose-100/65 !border-rose-200/80 shadow-rose-200/30"
+        : nextVaccination.daysUntil === 0
+          ? "!bg-orange-100/65 !border-orange-200/80 shadow-orange-200/30"
+          : nextVaccination.daysUntil <= 3
+            ? "!bg-amber-100/65 !border-amber-200/80 shadow-amber-200/30"
+            : nextVaccination.daysUntil <= 14
+              ? "!bg-violet-100/60 !border-violet-200/80 shadow-violet-200/30"
+              : "!bg-sky-50/70 !border-sky-100";
+
+  const nextReminderDescription = !nextVaccination
+    ? "Pas de rappel prévu"
+    : nextVaccination.daysUntil < 0
+      ? `En retard de ${Math.abs(nextVaccination.daysUntil)} jour(s)`
+      : nextVaccination.daysUntil === 0
+        ? "À faire aujourd’hui"
+        : `Dans ${nextVaccination.daysUntil} jour(s)`;
+
+  const applyVaccinationStatus = (
+    recordId: string,
+    newStatus: "DONE" | "PENDING",
+  ) => {
+    updateCachedVaccination(recordId, newStatus);
+    setChildren(getCachedChildren() || []);
+  };
+
+  const markVaccinationDone = async (vaccination: DashboardVaccination) => {
+    setUpdatingVaccination(vaccination.id);
+    const previousStatus = vaccination.status as "DONE" | "PENDING";
+    applyVaccinationStatus(vaccination.id, "DONE");
+    try {
+      const result = await mutateWithOfflineQueue({
+        url: `/api/vaccinations/${vaccination.id}`,
+        method: "PATCH",
+        body: { status: "DONE", baseVersion: vaccination.version || 0 },
+      });
+      if (!result.ok && !result.queued) {
+        applyVaccinationStatus(vaccination.id, previousStatus);
+      }
+    } catch {
+      applyVaccinationStatus(vaccination.id, previousStatus);
+    } finally {
+      setUpdatingVaccination(null);
+    }
+  };
 
   return (
     <div className="relative space-y-12 pb-20 overflow-hidden">
@@ -178,7 +236,7 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="p-5 glass-card rounded-[2rem] text-slate-600 relative hover:scale-110 transition-all border-white shadow-lg active:scale-95 group">
+          <button className="hidden lg:block p-5 glass-card rounded-[2rem] text-slate-600 relative hover:scale-110 transition-all border-white shadow-lg active:scale-95 group">
             <Bell size={24} className="group-hover:text-sky-500 transition-colors" />
             <span className="absolute top-5 right-5 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-pulse" />
           </button>
@@ -199,6 +257,7 @@ export default function Dashboard() {
           progress={hasChildren ? vaccinationRate : undefined}
           icon={ShieldCheck}
           color="sky"
+          onClick={() => setDashboardModal("progress")}
         />
         <StatCard
           title="Prochain Rappel"
@@ -212,7 +271,10 @@ export default function Dashboard() {
           }
           icon={Calendar}
           color="indigo"
+          displayDescription={nextReminderDescription}
           isUrgent={nextVaccineInfo.days <= 7 && nextVaccineInfo.name !== "Aucun"}
+          toneClassName={nextReminderTone}
+          onClick={() => setDashboardModal("next")}
         />
         <StatCard
           title="Alertes actives"
@@ -220,6 +282,7 @@ export default function Dashboard() {
           description="Sous 30 jours"
           icon={Activity}
           color="emerald"
+          onClick={() => setDashboardModal("alerts")}
         />
         <StatCard
           title="Points Santé"
@@ -429,9 +492,18 @@ export default function Dashboard() {
         child={selectedChildForCalendar}
         isOpen={isCalendarOpen}
         onClose={() => setIsCalendarOpen(false)}
-        onUpdate={() => {
-          refreshData();
+        onUpdate={(recordId, newStatus) => {
+          applyVaccinationStatus(recordId, newStatus);
         }}
+      />
+      <DashboardInsightsModal
+        kind={dashboardModal}
+        onClose={() => setDashboardModal(null)}
+        nextVaccination={nextVaccination}
+        alerts={alertVaccinations}
+        allVaccinations={allVaccinations}
+        updatingId={updatingVaccination}
+        onMarkDone={markVaccinationDone}
       />
     </div>
   );

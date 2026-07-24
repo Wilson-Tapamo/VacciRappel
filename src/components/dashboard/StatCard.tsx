@@ -11,11 +11,14 @@ interface StatCardProps {
     title: string;
     value: string;
     description?: string;
+    displayDescription?: string;
     change?: string;
     icon: LucideIcon;
     color: "sky" | "amber" | "emerald" | "rose" | "indigo";
     progress?: number;
     isUrgent?: boolean;
+    onClick?: () => void;
+    toneClassName?: string;
 }
 
 const colorMap = {
@@ -26,11 +29,25 @@ const colorMap = {
     indigo: "bg-indigo-50 text-indigo-600 border-indigo-100 bg-gradient-to-br from-indigo-50 to-white",
 };
 
-export default function StatCard({ title, value, description, change, icon: Icon, color, isUrgent, progress }: StatCardProps) {
+export default function StatCard({ title, value, description, displayDescription, change, icon: Icon, color, isUrgent, progress, onClick, toneClassName }: StatCardProps) {
     return (
         <motion.div
+            onClick={onClick}
+            onKeyDown={(event) => {
+                if (onClick && (event.key === "Enter" || event.key === " ")) {
+                    event.preventDefault();
+                    onClick();
+                }
+            }}
+            role={onClick ? "button" : undefined}
+            tabIndex={onClick ? 0 : undefined}
             whileHover={{ y: -8, scale: 1.02 }}
-            className="p-8 glass-card border-white/80 shadow-2xl shadow-sky-900/5 transition-all duration-500 group relative overflow-hidden"
+            whileTap={onClick ? { scale: 0.98 } : undefined}
+            className={cn(
+                "p-8 glass-card border-white/80 shadow-2xl shadow-sky-900/5 transition-all duration-500 group relative overflow-hidden text-left w-full",
+                onClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200",
+                toneClassName,
+            )}
         >
             {/* Background Accent */}
             <div className={cn("absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity", 
@@ -78,10 +95,10 @@ export default function StatCard({ title, value, description, change, icon: Icon
                     </div>
                 )}
 
-                {description && (
+                {(displayDescription || description) && (
                     <p className="text-xs text-slate-500 mt-4 font-medium flex items-center gap-2">
                         <span className={cn("w-1.5 h-1.5 rounded-full", color === 'sky' ? 'bg-sky-400' : 'bg-slate-300')} />
-                        {description}
+                        {displayDescription || description}
                     </p>
                 )}
             </div>

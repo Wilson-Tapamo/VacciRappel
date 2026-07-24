@@ -7,7 +7,7 @@ import {
     User,
     HeartPulse,
     ShieldCheck,
-    Calendar
+    MapPin
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ const navItems = [
     { name: "Accueil", href: "/", icon: Home },
     { name: "Vaccins", href: "/vaccine-library", icon: ShieldCheck },
     { name: "Support", href: "/support", icon: HeartPulse, isPrimary: true },
-    { name: "Calendrier", href: "/calendar", icon: Calendar },
+    { name: "Carte & hôpitaux", href: "/hospitals", icon: MapPin },
     { name: "Profil", href: "/profile", icon: User },
 ];
 
@@ -34,6 +34,7 @@ export default function MobileBottomNav() {
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                aria-label={item.name}
                                 className="relative -top-6"
                             >
                                 <div className={cn(
@@ -58,6 +59,7 @@ export default function MobileBottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
+                            aria-label={item.name}
                             className="relative p-3 group"
                         >
                             <item.icon

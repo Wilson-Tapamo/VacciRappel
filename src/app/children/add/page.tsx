@@ -16,6 +16,8 @@ import {
     Plus
 } from "lucide-react";
 import Link from "next/link";
+import { mutateWithOfflineQueue } from "@/lib/offlineQueue";
+import { addCachedChild, loadChildren } from "@/lib/childrenStore";
 
 const steps = [
     { id: "identity", title: "Identité", icon: Baby },
@@ -46,13 +48,26 @@ export default function AddChildPage() {
     const handleFinish = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/children", {
+            const result = await mutateWithOfflineQueue({
+                url: "/api/children",
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: formData,
             });
 
-            if (res.ok) {
+            if (result.ok || result.queued) {
+                if (result.queued) {
+                    addCachedChild({
+                        ...formData,
+                        id: `local-${crypto.randomUUID()}`,
+                        birthDate: new Date(formData.birthDate).toISOString(),
+                        vaccinations: [],
+                        growthRecords: [],
+                        version: 0,
+                        pendingSync: true,
+                    });
+                } else {
+                    await loadChildren(true);
+                }
                 nextStep(); // Move to success step
                 setTimeout(() => {
                     router.push("/");

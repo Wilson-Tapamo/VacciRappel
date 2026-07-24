@@ -8,7 +8,7 @@ const KEYS = "keys";
 export type QueueItemView = {
   id: string;
   url: string;
-  method: "PATCH" | "POST";
+  method: "PATCH" | "POST" | "PUT";
   createdAt: string;
   state: "pending" | "conflict";
   local: Record<string, unknown>;
@@ -18,7 +18,7 @@ export type QueueItemView = {
 type StoredMutation = {
   id: string;
   url: string;
-  method: "PATCH" | "POST";
+  method: "PATCH" | "POST" | "PUT";
   createdAt: string;
   state: "pending" | "conflict";
   iv: string;
@@ -27,7 +27,7 @@ type StoredMutation = {
 
 type MutationInput = {
   url: string;
-  method?: "PATCH" | "POST";
+  method?: "PATCH" | "POST" | "PUT";
   body: Record<string, unknown>;
 };
 

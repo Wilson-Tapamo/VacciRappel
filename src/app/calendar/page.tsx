@@ -17,6 +17,13 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import VaccineDetailModal from "@/components/vaccines/VaccineDetailModal";
 import CatchUpPlanner from "@/components/calendar/CatchUpPlanner";
+import VaccinationCelebration from "@/components/calendar/VaccinationCelebration";
+import { mutateWithOfflineQueue } from "@/lib/offlineQueue";
+import {
+    getCachedChildren,
+    loadChildren,
+    updateCachedVaccination,
+} from "@/lib/childrenStore";
 
 type Vaccine = {
     name: string;
@@ -29,6 +36,8 @@ type Vaccination = {
     status: string;
     date: string;
     vaccine: Vaccine;
+    version?: number;
+    eligibility?: { eligible?: boolean; reasons?: string[] };
 };
 
 type Child = {
@@ -51,20 +60,36 @@ const formatDate = (dateString: string) => {
 };
 
 export default function CalendarPage() {
-    const [children, setChildren] = useState<Child[]>([]);
-    const [loading, setLoading] = useState(true);
+    const cachedChildren = getCachedChildren() as Child[] | null;
+    const [children, setChildren] = useState<Child[]>(cachedChildren || []);
+    const [loading, setLoading] = useState(!cachedChildren);
     const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
-    const [selectedVaccine, setSelectedVaccine] = useState<Vaccine | null>(null);
+    const [selectedVaccination, setSelectedVaccination] = useState<Vaccination | null>(null);
+    const [updating, setUpdating] = useState(false);
+    const [celebration, setCelebration] = useState<{
+        childName: string;
+        vaccineName: string;
+        queued: boolean;
+    } | null>(null);
 
     useEffect(() => {
-        fetch("/api/children")
-            .then(res => res.json())
+        loadChildren()
             .then(data => {
                 const childData = Array.isArray(data) ? (data as Child[]) : [];
                 setChildren(childData);
                 if (childData.length > 0) setSelectedChildId(childData[0].id);
                 setLoading(false);
-            });
+            })
+            .catch(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
+        const syncChildren = (event: Event) => {
+            const data = (event as CustomEvent<Child[]>).detail;
+            if (Array.isArray(data)) setChildren(data);
+        };
+        window.addEventListener("vacci:children-changed", syncChildren);
+        return () => window.removeEventListener("vacci:children-changed", syncChildren);
     }, []);
 
     if (loading) {
@@ -96,6 +121,41 @@ export default function CalendarPage() {
     }
 
     const activeChild = children.find(c => c.id === selectedChildId) || children[0];
+
+    const markSelectedDone = async () => {
+        if (!selectedVaccination || selectedVaccination.status === "DONE") return;
+        const vaccination = selectedVaccination;
+        setUpdating(true);
+        updateCachedVaccination(vaccination.id, "DONE");
+        setChildren((getCachedChildren() || []) as Child[]);
+        setSelectedVaccination(null);
+
+        try {
+            const result = await mutateWithOfflineQueue({
+                url: `/api/vaccinations/${vaccination.id}`,
+                method: "PATCH",
+                body: {
+                    status: "DONE",
+                    baseVersion: vaccination.version || 0,
+                },
+            });
+            if (!result.ok && !result.queued) {
+                updateCachedVaccination(vaccination.id, "PENDING");
+                setChildren((getCachedChildren() || []) as Child[]);
+                return;
+            }
+            setCelebration({
+                childName: activeChild.name,
+                vaccineName: vaccination.vaccine.name,
+                queued: result.queued,
+            });
+        } catch {
+            updateCachedVaccination(vaccination.id, "PENDING");
+            setChildren((getCachedChildren() || []) as Child[]);
+        } finally {
+            setUpdating(false);
+        }
+    };
 
     // Sort vaccinations: pending first (by date), then done (by date)
     const sortedVaccinations = [...(activeChild.vaccinations || [])].sort((a, b) => {
@@ -226,7 +286,7 @@ export default function CalendarPage() {
                                         isLeft ? "md:pr-16 md:justify-end" : "md:pl-16 md:justify-start"
                                     )}>
                                         <button 
-                                            onClick={() => setSelectedVaccine(v.vaccine)}
+                                            onClick={() => setSelectedVaccination(v)}
                                             className={cn(
                                                 "w-full glass-card p-6 border-2 transition-all hover:-translate-y-2 relative overflow-hidden group text-left",
                                                 isDone 
@@ -292,9 +352,20 @@ export default function CalendarPage() {
             </div>
 
             <VaccineDetailModal 
-                vaccine={selectedVaccine}
-                isOpen={!!selectedVaccine}
-                onClose={() => setSelectedVaccine(null)}
+                vaccine={selectedVaccination?.vaccine}
+                isOpen={!!selectedVaccination}
+                onClose={() => setSelectedVaccination(null)}
+                actionLabel={selectedVaccination?.status === "DONE" ? undefined : "Marquer comme effectué"}
+                onAction={selectedVaccination?.status === "DONE" ? undefined : markSelectedDone}
+                actionDisabled={selectedVaccination?.eligibility?.eligible === false}
+                actionLoading={updating}
+            />
+            <VaccinationCelebration
+                show={!!celebration}
+                childName={celebration?.childName}
+                vaccineName={celebration?.vaccineName}
+                queued={celebration?.queued}
+                onDone={() => setCelebration(null)}
             />
         </div>
     );

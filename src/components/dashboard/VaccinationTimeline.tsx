@@ -19,7 +19,7 @@ export default function VaccinationTimeline({ childrenData }: { childrenData: an
     const vaccinations = completedVaccinations;
 
     return (
-        <div className="glass-card p-8 md:p-12 border-white/80 shadow-2xl shadow-sky-900/5 relative overflow-hidden bg-white/40 backdrop-blur-xl">
+        <div className="render-optimized glass-card p-5 md:p-12 border-white/80 shadow-2xl shadow-sky-900/5 relative overflow-hidden bg-white/40 backdrop-blur-xl">
             {/* Background pattern */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-sky-50 rounded-full blur-3xl opacity-40 pointer-events-none" />
 
@@ -36,7 +36,7 @@ export default function VaccinationTimeline({ childrenData }: { childrenData: an
                 </button>
             </div>
 
-            <div className="space-y-10 relative before:absolute before:left-7 before:top-2 before:bottom-2 before:w-1 before:bg-gradient-to-b before:from-sky-100 before:via-sky-200 before:to-transparent before:rounded-full">
+            <div className="relative flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 no-scrollbar md:block md:space-y-10 md:overflow-visible md:pb-0 md:before:absolute md:before:left-7 md:before:top-2 md:before:bottom-2 md:before:w-1 md:before:bg-gradient-to-b md:before:from-sky-100 md:before:via-sky-200 md:before:to-transparent md:before:rounded-full">
                 {vaccinations.length > 0 ? (
                     vaccinations.map((record: any, idx: number) => (
                         <motion.div
@@ -44,8 +44,8 @@ export default function VaccinationTimeline({ childrenData }: { childrenData: an
                             initial={{ opacity: 0, x: -20 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: idx * 0.1 }}
-                            className="flex items-start gap-6 relative group"
+                            transition={{ duration: 0.4, delay: Math.min(idx, 5) * 0.04 }}
+                            className="relative flex min-w-[82vw] snap-center items-start gap-4 group md:min-w-0 md:gap-6"
                         >
                             {/* Point icon */}
                             <div className="relative z-10">
