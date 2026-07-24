@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
     Home,
-    User,
+    Baby,
     HeartPulse,
     ShieldCheck,
     MapPin
@@ -17,7 +17,7 @@ const navItems = [
     { name: "Vaccins", href: "/vaccine-library", icon: ShieldCheck },
     { name: "Support", href: "/support", icon: HeartPulse, isPrimary: true },
     { name: "Carte & hôpitaux", href: "/hospitals", icon: MapPin },
-    { name: "Profil", href: "/profile", icon: User },
+    { name: "Enfants", href: "/profile", icon: Baby },
 ];
 
 export default function MobileBottomNav() {

@@ -249,7 +249,19 @@ export async function mutateWithOfflineQueue(input: MutationInput) {
       await markConflict(stored, input.body, conflict.server || conflict);
       return { ok: false, queued: true, conflict: true };
     }
-    return { ok: response.ok, queued: false, conflict: false };
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+      return {
+        ok: false,
+        queued: false,
+        conflict: false,
+        error:
+          errorBody?.message ||
+          `La requête a échoué avec le code ${response.status}.`,
+      };
+    }
+    const data = await response.clone().json().catch(() => null);
+    return { ok: true, queued: false, conflict: false, data };
   } catch {
     await enqueueMutation(input);
     return { ok: true, queued: true, conflict: false };

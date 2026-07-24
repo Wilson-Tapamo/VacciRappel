@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getSessionUserId } from "@/lib/auth-user";
 import { prisma } from "@/lib/prisma";
 import { evaluateVaccineEligibility } from "@/lib/vaccine-eligibility";
+import { Prisma } from "@prisma/client";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -41,40 +42,76 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
+    const name = typeof body.name === "string" ? body.name.trim() : "";
     const birthDate = new Date(body.birthDate);
-    const child = await prisma.child.create({
-      data: {
-        name: body.name,
-        birthDate,
-        gender: body.gender,
-        image: body.image,
-        bloodGroup: body.bloodGroup,
-        allergies: body.allergies,
-        conditions: body.conditions,
-        medicalInfo: body.medicalInfo,
-        medicalBookletScan: body.medicalBookletScan,
-        userId,
-      },
-    });
+    if (!name || Number.isNaN(birthDate.getTime())) {
+      return NextResponse.json(
+        { message: "Le nom et la date de naissance sont requis." },
+        { status: 400 },
+      );
+    }
 
-    const vaccines = await prisma.vaccine.findMany();
-    const preciseScheduleAvailable = vaccines.some((vaccine) => vaccine.recommendedAgeDays !== null);
-    const records = vaccines
-      .filter((vaccine) => !preciseScheduleAvailable || vaccine.recommendedAgeDays !== null)
-      .map((vaccine) => {
-        const date = new Date(birthDate);
-        if (vaccine.recommendedAgeDays !== null) {
-          date.setUTCDate(date.getUTCDate() + vaccine.recommendedAgeDays);
-        } else {
-          date.setUTCMonth(date.getUTCMonth() + vaccine.recommendedAge);
-        }
-        return { childId: child.id, vaccineId: vaccine.id, status: "PENDING", date };
+    const child = await prisma.$transaction(async (transaction) => {
+      const createdChild = await transaction.child.create({
+        data: {
+          name,
+          birthDate,
+          gender: body.gender === "F" ? "F" : "M",
+          image: body.image || null,
+          bloodGroup: body.bloodGroup || null,
+          allergies: body.allergies || null,
+          conditions: body.conditions || null,
+          medicalInfo: body.medicalInfo || null,
+          medicalBookletScan: body.medicalBookletScan || null,
+          userId,
+        },
       });
-    if (records.length) await prisma.vaccinationRecord.createMany({ data: records });
+
+      const vaccines = await transaction.vaccine.findMany();
+      const preciseScheduleAvailable = vaccines.some(
+        (vaccine) => vaccine.recommendedAgeDays !== null,
+      );
+      const records = vaccines
+        .filter(
+          (vaccine) =>
+            !preciseScheduleAvailable || vaccine.recommendedAgeDays !== null,
+        )
+        .map((vaccine) => {
+          const date = new Date(birthDate);
+          if (vaccine.recommendedAgeDays !== null) {
+            date.setUTCDate(date.getUTCDate() + vaccine.recommendedAgeDays);
+          } else {
+            date.setUTCMonth(date.getUTCMonth() + vaccine.recommendedAge);
+          }
+          return {
+            childId: createdChild.id,
+            vaccineId: vaccine.id,
+            status: "PENDING",
+            date,
+          };
+        });
+      if (records.length) {
+        await transaction.vaccinationRecord.createMany({ data: records });
+      }
+      return createdChild;
+    });
 
     return NextResponse.json(child, { status: 201 });
   } catch (error) {
     console.error("POST /api/children:", error);
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2022"
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "La base de données doit être mise à jour avant d’ajouter un enfant.",
+          code: "DATABASE_SCHEMA_OUTDATED",
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
   }
 }

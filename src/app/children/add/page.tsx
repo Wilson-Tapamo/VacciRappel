@@ -12,6 +12,7 @@ import {
     Check,
     Stethoscope,
     FileText,
+    ShieldAlert,
     X,
     Plus
 } from "lucide-react";
@@ -30,6 +31,7 @@ export default function AddChildPage() {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
     const [formData, setFormData] = useState({
         name: "",
         birthDate: "",
@@ -47,6 +49,7 @@ export default function AddChildPage() {
 
     const handleFinish = async () => {
         setLoading(true);
+        setError("");
         try {
             const result = await mutateWithOfflineQueue({
                 url: "/api/children",
@@ -73,9 +76,12 @@ export default function AddChildPage() {
                     router.push("/");
                     router.refresh();
                 }, 3000);
+            } else {
+                setError(result.error || "Impossible d’enregistrer l’enfant.");
             }
         } catch (error) {
             console.error("Failed to add child", error);
+            setError("La connexion a échoué. Réessayez dans quelques instants.");
         } finally {
             setLoading(false);
         }
@@ -335,6 +341,17 @@ export default function AddChildPage() {
                     </motion.div>
                 </AnimatePresence>
             </div>
+
+            {error && currentStep < steps.length - 1 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 flex items-start gap-3 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-xs font-bold leading-5 text-rose-700"
+                >
+                    <ShieldAlert size={18} className="mt-0.5 shrink-0" />
+                    {error}
+                </motion.div>
+            )}
 
             {/* Footer Navigation */}
             {currentStep < steps.length - 1 && (

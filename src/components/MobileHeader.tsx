@@ -8,14 +8,18 @@ import {
   CalendarClock,
   CheckCircle2,
   CloudUpload,
+  LogOut,
+  UserRound,
   WifiOff,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { getQueueItems } from "@/lib/offlineQueue";
+import { signOut, useSession } from "next-auth/react";
 
 export default function MobileHeader() {
-  const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
+  const [openPanel, setOpenPanel] = useState<"notifications" | "account" | null>(null);
   const [pendingSync, setPendingSync] = useState(0);
   const [online, setOnline] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -41,11 +45,11 @@ export default function MobileHeader() {
 
   useEffect(() => {
     const closeOutside = (event: PointerEvent) => {
-      if (!panelRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!panelRef.current?.contains(event.target as Node)) setOpenPanel(null);
     };
-    if (open) document.addEventListener("pointerdown", closeOutside);
+    if (openPanel) document.addEventListener("pointerdown", closeOutside);
     return () => document.removeEventListener("pointerdown", closeOutside);
-  }, [open]);
+  }, [openPanel]);
 
   return (
     <header className="fixed inset-x-3 top-[max(.75rem,env(safe-area-inset-top))] z-[65] lg:hidden">
@@ -71,20 +75,36 @@ export default function MobileHeader() {
           </span>
         </Link>
 
-        <button
-          onClick={() => setOpen((value) => !value)}
-          aria-expanded={open}
-          aria-label="Notifications"
-          className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/70 text-slate-700 shadow-sm transition active:scale-95"
-        >
-          {open ? <X size={20} /> : <Bell size={20} />}
-          {pendingSync > 0 && !open && (
-            <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-white bg-rose-500" />
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              setOpenPanel((value) =>
+                value === "notifications" ? null : "notifications",
+              )
+            }
+            aria-expanded={openPanel === "notifications"}
+            aria-label="Notifications"
+            className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/70 text-slate-700 shadow-sm transition active:scale-95"
+          >
+            {openPanel === "notifications" ? <X size={20} /> : <Bell size={20} />}
+            {pendingSync > 0 && openPanel !== "notifications" && (
+              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-white bg-rose-500" />
+            )}
+          </button>
+          <button
+            onClick={() =>
+              setOpenPanel((value) => (value === "account" ? null : "account"))
+            }
+            aria-expanded={openPanel === "account"}
+            aria-label="Menu utilisateur"
+            className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-300 transition active:scale-95"
+          >
+            {openPanel === "account" ? <X size={20} /> : <UserRound size={20} />}
+          </button>
+        </div>
 
         <AnimatePresence>
-          {open && (
+          {openPanel === "notifications" && (
             <motion.div
               initial={{ opacity: 0, y: -8, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -107,7 +127,7 @@ export default function MobileHeader() {
 
               <Link
                 href="/alerts"
-                onClick={() => setOpen(false)}
+                onClick={() => setOpenPanel(null)}
                 className="flex items-start gap-3 rounded-2xl p-3 transition hover:bg-sky-50"
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
@@ -148,6 +168,49 @@ export default function MobileHeader() {
                   </span>
                 </span>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {openPanel === "account" && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.97 }}
+              className="absolute right-0 top-[4.5rem] w-64 overflow-hidden rounded-[1.75rem] border border-white bg-white p-3 shadow-2xl shadow-slate-900/20"
+            >
+              <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                  <UserRound size={19} />
+                </span>
+                <p className="mt-3 truncate text-sm font-black">
+                  {session?.user?.name || "Mon compte"}
+                </p>
+                <p className="mt-1 text-[10px] font-medium text-slate-400">
+                  Espace personnel
+                </p>
+              </div>
+
+              <Link
+                href="/account"
+                onClick={() => setOpenPanel(null)}
+                className="mt-2 flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-slate-700 transition hover:bg-sky-50 hover:text-sky-700"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
+                  <UserRound size={17} />
+                </span>
+                Profil
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/auth/login" })}
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                  <LogOut size={17} />
+                </span>
+                Déconnexion
+              </button>
             </motion.div>
           )}
         </AnimatePresence>

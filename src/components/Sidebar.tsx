@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import {
     Home,
     Calendar,
-    User,
+    UserRound,
+    Baby,
     Bell,
     MapPin,
     ScanLine,
@@ -30,7 +31,8 @@ const navItems = [
     { name: "Carte Santé", href: "/map", icon: MapPin },
     { name: "Hôpitaux", href: "/hospitals", icon: Building2 },
     { name: "Bibliothèque", href: "/vaccine-library", icon: ShieldCheck },
-    { name: "Profil Enfant", href: "/profile", icon: User },
+    { name: "Profil Enfant", href: "/profile", icon: Baby },
+    { name: "Mon profil", href: "/account", icon: UserRound },
     { name: "Alertes", href: "/alerts", icon: Bell },
     { name: "Support IA", href: "/support", icon: HelpCircle },
 ];

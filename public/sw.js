@@ -1,10 +1,11 @@
-const VERSION = "vacci-rappel-v3";
+const VERSION = "vacci-rappel-v4";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const DATA_CACHE = `${VERSION}-data`;
 
 const APP_ROUTES = [
   "/",
+  "/account",
   "/alerts",
   "/calendar",
   "/children/add",
