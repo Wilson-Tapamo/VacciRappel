@@ -6,10 +6,9 @@ import {
     MapPin, Star, Clock, Phone, Globe, ChevronRight,
     Shield, Calendar, Activity, CheckCircle,
     Building2, Heart, Stethoscope, Baby, ArrowLeft,
-    Search, Navigation, Info
+    Search, Navigation, Info, Map
 } from "lucide-react";
 import Link from "next/link";
-import MobileHospitalTabs from "@/components/MobileHospitalTabs";
 import MapPage from "../map/page";
 
 const hospitals: Hospital[] = [
@@ -195,16 +194,36 @@ export default function HospitalProfilePage() {
     const [selectedHospital, setSelectedHospital] = useState<Hospital>(hospitals[0]);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState("overview");
+    const [mobileView, setMobileView] = useState<"map" | "hospitals">("map");
 
     const filtered = hospitals.filter(h =>
         h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         h.specialty.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const selectHospital = (hospital: Hospital) => {
+        setSelectedHospital(hospital);
+        setActiveTab("overview");
+    };
+
     const hospitalContent = (
-        <div className="space-y-8 pb-10">
+        <div className="h-dvh space-y-6 overflow-y-auto bg-slate-50 px-4 pb-32 pt-24 lg:h-auto lg:space-y-8 lg:overflow-visible lg:bg-transparent lg:px-0 lg:pb-10 lg:pt-0">
+            <div className="flex items-center justify-between lg:hidden">
+                <button
+                    type="button"
+                    onClick={() => setMobileView("map")}
+                    className="flex items-center gap-2 rounded-full border border-white bg-white/90 px-4 py-2.5 text-xs font-black text-slate-700 shadow-lg backdrop-blur-xl"
+                >
+                    <Map size={15} className="text-sky-500" />
+                    Retour à la carte
+                </button>
+                <span className="rounded-full bg-sky-100 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-sky-700">
+                    {filtered.length} centres
+                </span>
+            </div>
+
             {/* Hero Header */}
-            <div className="relative rounded-[2.5rem] overflow-hidden p-8 md:p-12 gradient-hero border border-white/80 shadow-xl">
+            <div className="relative hidden rounded-[2.5rem] overflow-hidden p-8 md:p-12 gradient-hero border border-white/80 shadow-xl lg:block">
                 {/* Decorative blobs */}
                 <div className="absolute top-0 right-0 w-72 h-72 bg-sky-200/40 rounded-full -mr-20 -mt-20 blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-1/3 w-56 h-56 bg-violet-200/40 rounded-full -mb-16 blur-3xl pointer-events-none" />
@@ -267,42 +286,76 @@ export default function HospitalProfilePage() {
 
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{filtered.length} centre(s) trouvé(s)</p>
 
-                    {filtered.map(h => {
-                        const hc = colorMap[h.color];
-                        const isSelected = selectedHospital.id === h.id;
-                        return (
-                            <motion.button
-                                key={h.id}
-                                whileHover={{ y: -2 }}
-                                onClick={() => { setSelectedHospital(h); setActiveTab("overview"); }}
-                                className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${isSelected
-                                    ? `bg-white ${hc.border} shadow-xl shadow-${h.color}-900/10 ring-2 ${hc.ring}/20`
-                                    : 'bg-white/60 border-transparent hover:border-slate-100 hover:bg-white'
-                                }`}
-                            >
-                                <div className="flex items-start gap-4">
-                                    <div className={`w-12 h-12 bg-gradient-to-br ${h.gradient} rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-lg shrink-0`}>
-                                        {h.shortName}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-bold text-slate-800 text-sm line-clamp-1">{h.name}</h3>
+                    <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-3 no-scrollbar lg:hidden">
+                        {filtered.map((hospital) => {
+                            const isSelected = selectedHospital.id === hospital.id;
+                            return (
+                                <button
+                                    type="button"
+                                    key={hospital.id}
+                                    onClick={() => selectHospital(hospital)}
+                                    aria-label={`Afficher ${hospital.name}`}
+                                    aria-pressed={isSelected}
+                                    className="w-24 shrink-0 snap-start text-center"
+                                >
+                                    <span
+                                        className={`mx-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full border-[3px] bg-white p-1 shadow-lg transition ${
+                                            isSelected ? "scale-105 border-sky-500" : "border-white"
+                                        }`}
+                                    >
+                                        <span className={`flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br ${hospital.gradient} text-sm font-black text-white`}>
+                                            {hospital.shortName}
+                                        </span>
+                                    </span>
+                                    <span className="mt-2 block truncate text-[11px] font-black text-slate-800">
+                                        {hospital.shortName}
+                                    </span>
+                                    <span className="block text-[9px] font-bold text-slate-400">
+                                        {hospital.distance}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="hidden space-y-4 lg:block">
+                        {filtered.map(h => {
+                            const hc = colorMap[h.color];
+                            const isSelected = selectedHospital.id === h.id;
+                            return (
+                                <motion.button
+                                    key={h.id}
+                                    whileHover={{ y: -2 }}
+                                    onClick={() => selectHospital(h)}
+                                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${isSelected
+                                        ? `bg-white ${hc.border} shadow-xl shadow-${h.color}-900/10 ring-2 ${hc.ring}/20`
+                                        : 'bg-white/60 border-transparent hover:border-slate-100 hover:bg-white'
+                                    }`}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div className={`w-12 h-12 bg-gradient-to-br ${h.gradient} rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-lg shrink-0`}>
+                                            {h.shortName}
                                         </div>
-                                        <p className="text-xs text-slate-500 flex items-center gap-1 mb-2">
-                                            <MapPin size={11} /> {h.distance} · {h.specialty}
-                                        </p>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${hc.badge}`}>{h.type}</span>
-                                            <span className="flex items-center gap-1 text-amber-500 text-[11px] font-black">
-                                                <Star size={11} fill="currentColor" />{h.rating}
-                                            </span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className="font-bold text-slate-800 text-sm line-clamp-1">{h.name}</h3>
+                                            </div>
+                                            <p className="text-xs text-slate-500 flex items-center gap-1 mb-2">
+                                                <MapPin size={11} /> {h.distance} · {h.specialty}
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${hc.badge}`}>{h.type}</span>
+                                                <span className="flex items-center gap-1 text-amber-500 text-[11px] font-black">
+                                                    <Star size={11} fill="currentColor" />{h.rating}
+                                                </span>
+                                            </div>
                                         </div>
+                                        <ChevronRight className={`shrink-0 mt-1 transition-colors ${isSelected ? 'text-sky-500' : 'text-slate-300'}`} size={18} />
                                     </div>
-                                    <ChevronRight className={`shrink-0 mt-1 transition-colors ${isSelected ? 'text-sky-500' : 'text-slate-300'}`} size={18} />
-                                </div>
-                            </motion.button>
-                        );
-                    })}
+                                </motion.button>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Hospital Detail */}
@@ -316,7 +369,7 @@ export default function HospitalProfilePage() {
                         className="lg:col-span-2 space-y-6"
                     >
                         {/* Header Card */}
-                        <div className={`relative rounded-[2rem] overflow-hidden p-8 bg-gradient-to-br ${selectedHospital.gradient} text-white shadow-2xl`}>
+                        <div className={`relative rounded-[2rem] overflow-hidden p-5 sm:p-8 bg-gradient-to-br ${selectedHospital.gradient} text-white shadow-2xl`}>
                             <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
                             <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl" />
                             
@@ -539,10 +592,16 @@ export default function HospitalProfilePage() {
     return (
         <>
             <div className="block lg:hidden">
-                <MobileHospitalTabs 
-                    mapContent={<MapPage />}
-                    hospitalsContent={hospitalContent} 
-                />
+                {mobileView === "map" ? (
+                    <MapPage
+                        onOpenHospitals={() => setMobileView("hospitals")}
+                        onOpenHospital={(hospitalId) => {
+                            const hospital = hospitals.find((item) => item.id === hospitalId);
+                            if (hospital) selectHospital(hospital);
+                            setMobileView("hospitals");
+                        }}
+                    />
+                ) : hospitalContent}
             </div>
             <div className="hidden lg:block">
                 {hospitalContent}
