@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { Download, Share, Smartphone, WifiOff, X } from "lucide-react";
 import { syncQueuedMutations } from "@/lib/offlineQueue";
+import { useSession } from "next-auth/react";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -34,6 +35,7 @@ function isRunningStandalone() {
 }
 
 export default function PwaManager() {
+  const { status } = useSession();
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null);
   const [showInstall, setShowInstall] = useState(false);
   const isIos = useSyncExternalStore(
@@ -51,11 +53,6 @@ export default function PwaManager() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
-        .then((registration) => {
-          const worker =
-            registration.active || registration.waiting || registration.installing;
-          worker?.postMessage({ type: "CACHE_APP" });
-        })
         .catch((error) => {
           console.error("Service worker registration failed:", error);
         });
@@ -72,6 +69,18 @@ export default function PwaManager() {
       window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
     };
   }, []);
+
+  useEffect(() => {
+    if (status !== "authenticated" || !("serviceWorker" in navigator)) return;
+
+    navigator.serviceWorker.ready
+      .then((registration) => {
+        registration.active?.postMessage({ type: "CACHE_APP" });
+      })
+      .catch((error) => {
+        console.error("Application cache initialization failed:", error);
+      });
+  }, [status]);
 
   useEffect(() => {
     if (isOnline) {

@@ -1,4 +1,4 @@
-const VERSION = "vacci-rappel-v4";
+const VERSION = "vacci-rappel-v5";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const DATA_CACHE = `${VERSION}-data`;
@@ -30,10 +30,8 @@ const STATIC_ASSETS = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     Promise.allSettled(
-      [...APP_ROUTES, ...STATIC_ASSETS].map(async (url) => {
-        const cache = await caches.open(
-          APP_ROUTES.includes(url) ? PAGE_CACHE : STATIC_CACHE,
-        );
+      STATIC_ASSETS.map(async (url) => {
+        const cache = await caches.open(STATIC_CACHE);
         const response = await fetch(url, { credentials: "include" });
         if (response.ok) await cache.put(url, response);
       }),
@@ -59,7 +57,7 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-async function fetchWithTimeout(request, timeoutMs = 1800) {
+async function fetchWithTimeout(request, timeoutMs = 10000) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -69,7 +67,7 @@ async function fetchWithTimeout(request, timeoutMs = 1800) {
   }
 }
 
-async function networkFirst(request, cacheName, fallback, timeoutMs = 1800) {
+async function networkFirst(request, cacheName, fallback, timeoutMs = 10000) {
   const cache = await caches.open(cacheName);
   try {
     const response = await fetchWithTimeout(request, timeoutMs);
@@ -82,6 +80,20 @@ async function networkFirst(request, cacheName, fallback, timeoutMs = 1800) {
   }
 }
 
+function isCacheablePageResponse(response) {
+  if (!response.ok || response.redirected) return false;
+
+  try {
+    const responseUrl = new URL(response.url);
+    return (
+      responseUrl.origin === self.location.origin &&
+      !responseUrl.pathname.startsWith("/auth/")
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function pageStaleWhileRevalidate(event) {
   const request = event.request;
   const cache = await caches.open(PAGE_CACHE);
@@ -89,7 +101,9 @@ async function pageStaleWhileRevalidate(event) {
   const pathname = new URL(request.url).pathname;
   const update = fetch(request)
     .then(async (response) => {
-      if (response.ok) await cache.put(pathname, response.clone());
+      if (isCacheablePageResponse(response)) {
+        await cache.put(pathname, response.clone());
+      }
       return response;
     })
     .catch(() => null);
@@ -129,6 +143,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Never cache or abort session and CSRF requests. NextAuth must keep direct
+  // control of the complete authentication exchange.
+  if (url.pathname.startsWith("/api/auth/")) return;
+
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       networkFirst(
@@ -146,7 +164,7 @@ self.addEventListener("fetch", (event) => {
               },
             },
           ),
-        url.pathname === "/api/children" ? 1200 : 1800,
+        10000,
       ),
     );
     return;
@@ -166,15 +184,22 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data?.type !== "CACHE_APP") return;
   event.waitUntil(
-    Promise.allSettled(
-      APP_ROUTES.map(async (url) => {
-        const response = await fetch(url, { credentials: "include" });
-        if (response.ok) {
-          const cache = await caches.open(PAGE_CACHE);
-          await cache.put(url, response);
+    (async () => {
+      const cache = await caches.open(PAGE_CACHE);
+
+      // The client sends CACHE_APP only after authentication. Sequential
+      // requests avoid a burst of protected navigations on mobile networks.
+      for (const url of APP_ROUTES) {
+        try {
+          const response = await fetch(url, { credentials: "include" });
+          if (isCacheablePageResponse(response)) {
+            await cache.put(url, response);
+          }
+        } catch {
+          // A partial cache is still useful when the connection is unstable.
         }
-      }),
-    ),
+      }
+    })(),
   );
 });
 

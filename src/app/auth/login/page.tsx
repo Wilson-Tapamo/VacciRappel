@@ -31,17 +31,26 @@ export default function LoginPage() {
         setIsSubmitting(true);
         setError("");
 
-        const result = await signIn("credentials", {
-            redirect: false,
-            phone: formData.phone,
-            password: formData.password,
-        });
+        try {
+            const result = await signIn("credentials", {
+                redirect: false,
+                phone: formData.phone.trim(),
+                password: formData.password,
+                callbackUrl: "/",
+            });
 
-        if (result?.error) {
-            setError("Numéro ou mot de passe incorrect");
+            if (!result || result.error) {
+                setError("Numéro ou mot de passe incorrect");
+                return;
+            }
+
+            router.replace(result.url || "/");
+            router.refresh();
+        } catch (error) {
+            console.error("Login request failed:", error);
+            setError("Connexion interrompue. Vérifiez votre réseau puis réessayez.");
+        } finally {
             setIsSubmitting(false);
-        } else {
-            router.push("/");
         }
     };
 

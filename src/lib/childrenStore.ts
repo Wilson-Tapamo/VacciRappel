@@ -27,21 +27,33 @@ function emitChildrenChanged() {
   }
 }
 
+function hasSameChildren(nextChildren: CachedChild[]) {
+  if (childrenCache === nextChildren) return true;
+  if (!childrenCache || childrenCache.length !== nextChildren.length) return false;
+
+  return JSON.stringify(childrenCache) === JSON.stringify(nextChildren);
+}
+
 export function getCachedChildren() {
   return childrenCache;
 }
 
 export function setCachedChildren(children: CachedChild[]) {
+  if (hasSameChildren(children)) return childrenCache || children;
+
   childrenCache = children;
   emitChildrenChanged();
   return children;
 }
 
 export async function loadChildren(force = false) {
+  if (childrenRequest) return childrenRequest;
   if (!force && childrenCache) return childrenCache;
-  if (!force && childrenRequest) return childrenRequest;
 
-  childrenRequest = fetch("/api/children")
+  childrenRequest = fetch("/api/children", {
+    credentials: "same-origin",
+    headers: { Accept: "application/json" },
+  })
     .then(async (response): Promise<CachedChild[]> => {
       if (!response.ok) throw new Error("Impossible de charger les profils.");
       const data = await response.json();

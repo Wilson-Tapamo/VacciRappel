@@ -63,6 +63,7 @@ export const authOptions: NextAuthOptions = {
     },
     pages: {
         signIn: "/auth/login",
+        error: "/auth/login",
     },
     secret: process.env.NEXTAUTH_SECRET || "default_secret_for_dev_only",
 };
