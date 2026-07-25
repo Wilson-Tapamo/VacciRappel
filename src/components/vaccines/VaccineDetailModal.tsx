@@ -53,9 +53,21 @@ interface VaccineDetailModalProps {
     onAction?: () => void;
     actionDisabled?: boolean;
     actionLoading?: boolean;
+    actionError?: string | null;
+    onExitComplete?: () => void;
 }
 
-export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLabel, onAction, actionDisabled, actionLoading }: VaccineDetailModalProps) {
+export default function VaccineDetailModal({
+    vaccine,
+    isOpen,
+    onClose,
+    actionLabel,
+    onAction,
+    actionDisabled,
+    actionLoading,
+    actionError,
+    onExitComplete,
+}: VaccineDetailModalProps) {
     if (!vaccine) return null;
 
     const scheduleRules = (vaccine.eligibilityRules || {}) as {
@@ -74,7 +86,7 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLab
             : `Dose ${vaccine.doseNumber || 1}`;
 
     return (
-        <AnimatePresence>
+        <AnimatePresence onExitComplete={onExitComplete}>
             {isOpen && (
                 <>
                     {/* Backdrop */}
@@ -291,14 +303,29 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLab
                             {/* Action */}
                             <div className="pt-6 pb-2">
                                 {onAction && (
-                                    <button
-                                        onClick={onAction}
-                                        disabled={actionDisabled || actionLoading}
-                                        className="mb-3 flex w-full items-center justify-center gap-3 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 py-5 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-200 transition-transform enabled:hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-                                        {actionLoading ? "Enregistrement…" : actionLabel || "Marquer fait"}
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={onAction}
+                                            disabled={actionDisabled || actionLoading}
+                                            className="mb-3 flex w-full items-center justify-center gap-3 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 py-5 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-200 transition-transform enabled:hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                                            {actionLoading ? "Validation en cours…" : actionLabel || "Marquer fait"}
+                                        </button>
+                                        <AnimatePresence initial={false}>
+                                            {actionError && (
+                                                <motion.p
+                                                    role="alert"
+                                                    initial={{ opacity: 0, y: -8, height: 0 }}
+                                                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                                                    exit={{ opacity: 0, y: -6, height: 0 }}
+                                                    className="mb-3 overflow-hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-xs font-bold leading-5 text-rose-700"
+                                                >
+                                                    {actionError}
+                                                </motion.p>
+                                            )}
+                                        </AnimatePresence>
+                                    </>
                                 )}
                                 <button
                                     onClick={onClose}

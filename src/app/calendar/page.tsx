@@ -65,7 +65,9 @@ export default function CalendarPage() {
     const [loading, setLoading] = useState(!cachedChildren);
     const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
     const [selectedVaccination, setSelectedVaccination] = useState<Vaccination | null>(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [updating, setUpdating] = useState(false);
+    const [actionError, setActionError] = useState<string | null>(null);
     const [celebration, setCelebration] = useState<{
         childName: string;
         vaccineName: string;
@@ -121,13 +123,25 @@ export default function CalendarPage() {
 
     const activeChild = children.find(c => c.id === selectedChildId) || children[0];
 
+    const openVaccination = (vaccination: Vaccination) => {
+        setSelectedVaccination(vaccination);
+        setActionError(null);
+        setIsDetailOpen(true);
+    };
+
+    const closeVaccination = () => {
+        if (updating) return;
+        setIsDetailOpen(false);
+        setActionError(null);
+    };
+
     const markSelectedDone = async () => {
-        if (!selectedVaccination || selectedVaccination.status === "DONE") return;
+        if (!selectedVaccination || selectedVaccination.status === "DONE" || updating) return;
         const vaccination = selectedVaccination;
+        const childName = activeChild.name;
+
+        setActionError(null);
         setUpdating(true);
-        updateCachedVaccination(vaccination.id, "DONE");
-        setChildren((getCachedChildren() || []) as Child[]);
-        setSelectedVaccination(null);
 
         try {
             const result = await mutateWithOfflineQueue({
@@ -135,22 +149,35 @@ export default function CalendarPage() {
                 method: "PATCH",
                 body: {
                     status: "DONE",
-                    baseVersion: vaccination.version || 0,
+                    baseVersion: vaccination.version ?? 0,
                 },
             });
-            if (!result.ok && !result.queued) {
-                updateCachedVaccination(vaccination.id, "PENDING");
-                setChildren((getCachedChildren() || []) as Child[]);
+
+            if (!result.ok) {
+                setActionError(
+                    result.conflict
+                        ? "La validation n’a pas pu être enregistrée. Les données ont changé ou cette dose n’est pas encore éligible."
+                        : result.error || "Impossible d’enregistrer cette vaccination. Veuillez réessayer.",
+                );
                 return;
             }
+
+            updateCachedVaccination(vaccination.id, "DONE");
+            setChildren((getCachedChildren() || []) as Child[]);
+            setIsDetailOpen(false);
             setCelebration({
-                childName: activeChild.name,
+                childName,
                 vaccineName: vaccination.vaccine.name,
                 queued: result.queued,
             });
+
+            if (!result.queued) {
+                void loadChildren(true)
+                    .then((data) => setChildren((data || []) as Child[]))
+                    .catch(() => undefined);
+            }
         } catch {
-            updateCachedVaccination(vaccination.id, "PENDING");
-            setChildren((getCachedChildren() || []) as Child[]);
+            setActionError("Une erreur inattendue est survenue. Veuillez réessayer.");
         } finally {
             setUpdating(false);
         }
@@ -285,7 +312,7 @@ export default function CalendarPage() {
                                         isLeft ? "md:pr-16 md:justify-end" : "md:pl-16 md:justify-start"
                                     )}>
                                         <button 
-                                            onClick={() => setSelectedVaccination(v)}
+                                            onClick={() => openVaccination(v)}
                                             className={cn(
                                                 "w-full glass-card p-6 border-2 transition-all hover:-translate-y-2 relative overflow-hidden group text-left",
                                                 isDone 
@@ -352,12 +379,19 @@ export default function CalendarPage() {
 
             <VaccineDetailModal 
                 vaccine={selectedVaccination?.vaccine}
-                isOpen={!!selectedVaccination}
-                onClose={() => setSelectedVaccination(null)}
+                isOpen={isDetailOpen}
+                onClose={closeVaccination}
                 actionLabel={selectedVaccination?.status === "DONE" ? undefined : "Marquer comme effectué"}
                 onAction={selectedVaccination?.status === "DONE" ? undefined : markSelectedDone}
                 actionDisabled={selectedVaccination?.eligibility?.eligible === false}
                 actionLoading={updating}
+                actionError={
+                    actionError ||
+                    (selectedVaccination?.eligibility?.eligible === false
+                        ? selectedVaccination.eligibility.reasons?.join(" · ") || "Cette dose n’est pas encore éligible."
+                        : null)
+                }
+                onExitComplete={() => setSelectedVaccination(null)}
             />
             <VaccinationCelebration
                 show={!!celebration}
