@@ -5,6 +5,7 @@ import { getSessionUserId } from "@/lib/auth-user";
 import { prisma } from "@/lib/prisma";
 import { evaluateVaccineEligibility } from "@/lib/vaccine-eligibility";
 import { Prisma } from "@prisma/client";
+import { planChildVaccinations } from "@/lib/vaccination-schedule";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -44,9 +45,21 @@ export async function POST(req: Request) {
     const body = await req.json();
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const birthDate = new Date(body.birthDate);
+    const today = new Date();
+    const completedVaccineCodes = Array.isArray(body.completedVaccineCodes)
+      ? body.completedVaccineCodes.filter(
+        (code: unknown): code is string => typeof code === "string",
+      )
+      : [];
     if (!name || Number.isNaN(birthDate.getTime())) {
       return NextResponse.json(
         { message: "Le nom et la date de naissance sont requis." },
+        { status: 400 },
+        );
+    }
+    if (birthDate > today) {
+      return NextResponse.json(
+        { message: "La date de naissance ne peut pas être dans le futur." },
         { status: 400 },
       );
     }
@@ -68,38 +81,24 @@ export async function POST(req: Request) {
       });
 
       const vaccines = await transaction.vaccine.findMany();
-      const preciseScheduleAvailable = vaccines.some(
-        (vaccine) => vaccine.recommendedAgeDays !== null,
-      );
-      const records = vaccines
-        .filter(
-          (vaccine) =>
-            !preciseScheduleAvailable ||
-            (vaccine.recommendedAgeDays !== null &&
-              (
-                vaccine.eligibilityRules as {
-                  schedule?: string;
-                } | null
-              )?.schedule === "ROUTINE"),
-        )
-        .map((vaccine) => {
-          const date = new Date(birthDate);
-          if (vaccine.recommendedAgeDays !== null) {
-            date.setUTCDate(date.getUTCDate() + vaccine.recommendedAgeDays);
-          } else {
-            date.setUTCMonth(date.getUTCMonth() + vaccine.recommendedAge);
-          }
-          return {
+      const plan = planChildVaccinations({
+        vaccines,
+        birthDate,
+        completedVaccineCodes,
+        today,
+      });
+      if (plan.records.length) {
+        await transaction.vaccinationRecord.createMany({
+          data: plan.records.map((record) => ({
+            ...record,
             childId: createdChild.id,
-            vaccineId: vaccine.id,
-            status: "PENDING",
-            date,
-          };
+          })),
         });
-      if (records.length) {
-        await transaction.vaccinationRecord.createMany({ data: records });
       }
-      return createdChild;
+      return {
+        ...createdChild,
+        scheduleMode: plan.mode,
+      };
     });
 
     return NextResponse.json(child, { status: 201 });
