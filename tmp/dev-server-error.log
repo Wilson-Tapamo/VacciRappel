@@ -1,0 +1,15 @@
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[next-auth][error][NO_SECRET] 
+https://next-auth.js.org/errors#no_secret
+[next-auth][warn][NEXTAUTH_URL] 
+https://next-auth.js.org/warnings#nextauth_url
+[next-auth][error][NO_SECRET] 
+https://next-auth.js.org/errors#no_secret
+[next-auth][error][NO_SECRET] 
+https://next-auth.js.org/errors#no_secret
+[next-auth][error][NO_SECRET] 
+https://next-auth.js.org/errors#no_secret
+[next-auth][error][NO_SECRET] 
+https://next-auth.js.org/errors#no_secret
+[next-auth][error][NO_SECRET] 
+https://next-auth.js.org/errors#no_secret

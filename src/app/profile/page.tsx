@@ -28,6 +28,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Link from "next/link";
 import ChildVaccinationModal from "@/components/dashboard/ChildVaccinationModal";
+import { formatVaccineAge } from "@/lib/vaccine-age";
 import { mutateWithOfflineQueue } from "@/lib/offlineQueue";
 import FamilyActions from "@/components/family/FamilyActions";
 import {
@@ -410,7 +411,7 @@ export default function ProfilePage() {
                                     </h4>
                                     <p className="text-slate-500 text-sm font-medium">
                                         {activeProfile.vaccinations?.find((v: any) => v.status === 'PENDING')
-                                            ? `Prévu à ${activeProfile.vaccinations.find((v: any) => v.status === 'PENDING').vaccine.recommendedAge} mois`
+                                            ? `Prévu à ${formatVaccineAge(activeProfile.vaccinations.find((v: any) => v.status === 'PENDING').vaccine)}`
                                             : "Aucun vaccin prévu"
                                         }
                                     </p>

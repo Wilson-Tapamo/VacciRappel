@@ -1,22 +1,50 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-    Search, ShieldCheck, Calendar, ChevronRight, Info,
-    Loader2, Filter, Syringe, BookOpen, Sparkles, ArrowUpRight,
+    Search, ShieldCheck, Info,
+    Syringe, BookOpen, ArrowUpRight,
     CheckCircle, Clock, AlertCircle, X, Heart, Baby, Activity
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import VaccineDetailModal from "@/components/vaccines/VaccineDetailModal";
+import { formatVaccineAge } from "@/lib/vaccine-age";
 
-const categories = [
-    { id: "all", label: "Tous", color: "bg-slate-100 text-slate-700", activeColor: "bg-slate-800 text-white" },
-    { id: "Fondamental", label: "Fondamental", color: "bg-indigo-50 text-indigo-700", activeColor: "bg-indigo-500 text-white" },
-    { id: "Indispensable", label: "Indispensable", color: "bg-sky-50 text-sky-700", activeColor: "bg-sky-500 text-white" },
-    { id: "Critique", label: "Critique", color: "bg-amber-50 text-amber-700", activeColor: "bg-amber-500 text-white" },
-    { id: "Obligatoire", label: "Obligatoire", color: "bg-rose-50 text-rose-700", activeColor: "bg-rose-500 text-white" },
-    { id: "Important", label: "Important", color: "bg-teal-50 text-teal-700", activeColor: "bg-teal-500 text-white" },
+type VaccineLibraryItem = {
+    id: string;
+    name: string;
+    protection?: string | null;
+    importance?: string | null;
+    recommendedAge?: number;
+    recommendedAgeDays?: number | null;
+    seriesCode?: string | null;
+    doseNumber?: number;
+    doses?: number;
+    eligibilityRules?: {
+        totalDoses?: number;
+        scheduleAges?: string[];
+        schedule?: "ROUTINE" | "TARGETED" | "ADOLESCENT";
+        targetNote?: string;
+        sourceLabel?: string;
+        sourceUrl?: string;
+    } | null;
+};
+
+const categoryStyles = [
+    { color: "bg-indigo-50 text-indigo-700", activeColor: "bg-indigo-500 text-white" },
+    { color: "bg-sky-50 text-sky-700", activeColor: "bg-sky-500 text-white" },
+    { color: "bg-amber-50 text-amber-700", activeColor: "bg-amber-500 text-white" },
+    { color: "bg-rose-50 text-rose-700", activeColor: "bg-rose-500 text-white" },
+    { color: "bg-teal-50 text-teal-700", activeColor: "bg-teal-500 text-white" },
 ];
+
+const categoryLabels: Record<string, string> = {
+    "Vaccination de routine": "Routine",
+    "Dose de naissance": "Naissance",
+    "Supplément de santé infantile": "Supplément",
+    "Programme ciblé": "Programme ciblé",
+    "Programme adolescent": "Adolescent",
+};
 
 const vaccineColors = [
     { gradient: "from-sky-400 to-cyan-500", bg: "bg-sky-50", text: "text-sky-600", badge: "bg-sky-100 text-sky-700" },
@@ -28,11 +56,11 @@ const vaccineColors = [
 ];
 
 export default function VaccineLibraryPage() {
-    const [vaccines, setVaccines] = useState<any[]>([]);
+    const [vaccines, setVaccines] = useState<VaccineLibraryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("all");
-    const [selectedVaccine, setSelectedVaccine] = useState<any>(null);
+    const [selectedVaccine, setSelectedVaccine] = useState<VaccineLibraryItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -44,7 +72,7 @@ export default function VaccineLibraryPage() {
                 return data;
             })
             .then(data => {
-                if (Array.isArray(data)) setVaccines(data);
+                if (Array.isArray(data)) setVaccines(data as VaccineLibraryItem[]);
                 else throw new Error("Format de données invalide");
                 setLoading(false);
             })
@@ -55,12 +83,50 @@ export default function VaccineLibraryPage() {
             });
     }, []);
 
+    const categories = useMemo(() => {
+        const availableCategories = Array.from(
+            new Set(
+                vaccines
+                    .map((vaccine) => vaccine.importance?.trim())
+                    .filter((importance): importance is string => Boolean(importance)),
+            ),
+        );
+
+        return [
+            {
+                id: "all",
+                label: "Tous",
+                color: "bg-slate-100 text-slate-700",
+                activeColor: "bg-slate-800 text-white",
+            },
+            ...availableCategories.map((importance, index) => ({
+                id: importance,
+                label: categoryLabels[importance] || importance,
+                ...categoryStyles[index % categoryStyles.length],
+            })),
+        ];
+    }, [vaccines]);
+
     const filtered = vaccines.filter(v => {
         const matchesSearch = v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             v.protection?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = selectedCategory === "all" || v.importance === selectedCategory;
         return matchesSearch && matchesCategory;
     });
+
+    const getTotalDoses = (vaccine: VaccineLibraryItem) => {
+        const configuredTotal = vaccine.eligibilityRules?.totalDoses;
+        if (configuredTotal && configuredTotal > 0) return configuredTotal;
+
+        if (vaccine.seriesCode) {
+            const seriesDoseCount = vaccines.filter(
+                (candidate) => candidate.seriesCode === vaccine.seriesCode,
+            ).length;
+            if (seriesDoseCount > 0) return seriesDoseCount;
+        }
+
+        return vaccine.doses && vaccine.doses > 0 ? vaccine.doses : 1;
+    };
 
     return (
         <div className="space-y-8 pb-20 max-w-7xl mx-auto">
@@ -91,7 +157,7 @@ export default function VaccineLibraryPage() {
                         <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Bibliothèque Vaccinale</span>
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-4">
-                        Tous les <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-500">Vaccins</span> en un clin d'œil
+                        Tous les <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-500">Vaccins</span> en un clin d’œil
                     </h1>
                     <p className="text-slate-500 font-medium text-lg leading-relaxed">
                         Informations détaillées sur chaque vaccin du programme national de vaccination du Cameroun.
@@ -177,6 +243,7 @@ export default function VaccineLibraryPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filtered.map((v, i) => {
                         const vc = vaccineColors[i % vaccineColors.length];
+                        const totalDoses = getTotalDoses(v);
                         return (
                             <motion.div
                                 key={v.id}
@@ -197,7 +264,7 @@ export default function VaccineLibraryPage() {
                                                 <ShieldCheck size={26} />
                                             </div>
                                             <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${vc.badge}`}>
-                                                {v.recommendedAge === 0 ? "Naissance" : `${v.recommendedAge} mois`}
+                                                {formatVaccineAge(v)}
                                             </div>
                                         </div>
 
@@ -215,7 +282,7 @@ export default function VaccineLibraryPage() {
                                             <div className={`flex items-center gap-1.5 px-3 py-1.5 ${vc.bg} rounded-xl`}>
                                                 <Clock size={12} className={vc.text} />
                                                 <span className={`text-[10px] font-black ${vc.text} uppercase tracking-wider`}>
-                                                    {v.doses || '1'} dose{(v.doses || 1) > 1 ? 's' : ''}
+                                                    {totalDoses} dose{totalDoses > 1 ? 's' : ''}
                                                 </span>
                                             </div>
                                             {v.importance && (
@@ -252,7 +319,7 @@ export default function VaccineLibraryPage() {
                     <div className="space-y-2">
                         <h3 className="text-xl font-black text-slate-800">Aucun résultat</h3>
                         <p className="text-slate-500 max-w-xs mx-auto text-sm">
-                            Aucun vaccin trouvé pour "{searchQuery}". Essayez avec un autre terme.
+                            Aucun vaccin trouvé pour &quot;{searchQuery}&quot;. Essayez avec un autre terme.
                         </p>
                     </div>
                     <button

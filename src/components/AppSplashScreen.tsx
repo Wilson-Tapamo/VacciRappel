@@ -80,7 +80,7 @@ export default function AppSplashScreen() {
                 width={230}
                 height={64}
                 priority
-                className="h-auto w-48 object-contain sm:w-56"
+                className="mx-auto h-auto w-48 object-contain sm:w-56"
               />
               <p className="mt-2 text-xs font-black uppercase tracking-[0.22em] text-sky-700/70">
                 Chaque dose est un super-pouvoir

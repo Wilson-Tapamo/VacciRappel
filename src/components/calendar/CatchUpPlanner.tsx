@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { AlertTriangle, Baby, CalendarClock, CheckCircle2, ChevronDown, Download, FileText, Info, ShieldCheck, WifiOff } from "lucide-react";
+import { Baby, CalendarClock, CheckCircle2, ChevronDown, Download, FileText, ShieldCheck, WifiOff } from "lucide-react";
 import { catchUpGroups, catchUpRules, getAgeInMonths, getCatchUpGroup } from "@/data/catchUpSchedule";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +26,15 @@ export default function CatchUpPlanner({ child }: { child?: ChildSummary }) {
   const automaticGroup = getCatchUpGroup(ageMonths);
   const selectedGroup = catchUpGroups.find((group) => group.id === selectedGroupId) || automaticGroup || catchUpGroups[0];
   const completedCount = child?.vaccinations?.filter((vaccination) => vaccination.status === "DONE").length || 0;
-  const outsideRange = ageMonths !== null && !automaticGroup;
+  const isEligibleForCatchUp = Boolean(
+    child &&
+    automaticGroup &&
+    ageMonths !== null &&
+    ageMonths >= 6 &&
+    completedCount === 0,
+  );
+
+  if (!isEligibleForCatchUp) return null;
 
   return (
     <section className="overflow-hidden rounded-[2.25rem] border border-slate-200/70 bg-white shadow-xl shadow-sky-900/5">
@@ -54,13 +62,11 @@ export default function CatchUpPlanner({ child }: { child?: ChildSummary }) {
 
       <div className="p-5 md:p-8">
         {child && ageMonths !== null && (
-          <div className={cn("mb-6 flex items-start gap-3 rounded-2xl border p-4", outsideRange ? "border-amber-200 bg-amber-50 text-amber-950" : completedCount > 0 ? "border-violet-200 bg-violet-50 text-violet-950" : "border-emerald-200 bg-emerald-50 text-emerald-950")}>
-            {outsideRange ? <AlertTriangle className="mt-0.5 shrink-0 text-amber-600" size={20} /> : completedCount > 0 ? <Info className="mt-0.5 shrink-0 text-violet-600" size={20} /> : <Baby className="mt-0.5 shrink-0 text-emerald-600" size={20} />}
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950">
+            <Baby className="mt-0.5 shrink-0 text-emerald-600" size={20} />
             <div className="text-sm leading-6">
               <p className="font-black">{child.name} · {ageMonths} mois</p>
-              <p className="font-medium opacity-80">
-                {outsideRange ? "L’âge calculé ne correspond pas aux parcours 3–59 mois de ce document." : completedCount > 0 ? `${completedCount} dose(s) sont déjà marquées comme reçues. Ce calendrier “jamais vacciné” ne doit donc pas être appliqué tel quel.` : `Le groupe ${automaticGroup?.id} mois a été sélectionné automatiquement.`}
-              </p>
+              <p className="font-medium opacity-80">Aucune dose reçue avant 6 mois. Le groupe {automaticGroup?.id} mois a été sélectionné automatiquement.</p>
             </div>
           </div>
         )}

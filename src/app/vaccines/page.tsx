@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import VaccineDetailModal from "@/components/vaccines/VaccineDetailModal";
+import { formatVaccineAge } from "@/lib/vaccine-age";
 
 export default function VaccinesPage() {
     const [vaccines, setVaccines] = useState<any[]>([]);
@@ -108,7 +109,7 @@ export default function VaccinesPage() {
                                             <ShieldCheck size={28} />
                                         </div>
                                         <div className="px-4 py-2 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500">
-                                            {v.recommendedAge === 0 ? "Nouveau-né" : `${v.recommendedAge} mois`}
+                                            {formatVaccineAge(v)}
                                         </div>
                                     </div>
 

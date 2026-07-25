@@ -103,7 +103,6 @@ export default function CalendarPage() {
     if (children.length === 0) {
         return (
             <div className="max-w-6xl mx-auto space-y-8 pb-20">
-                <CatchUpPlanner />
                 <div className="rounded-[2rem] border border-slate-200 bg-white px-6 py-10 text-center shadow-sm">
                     <div className="w-20 h-20 bg-gradient-to-br from-rose-400 to-pink-600 rounded-[1.75rem] flex items-center justify-center text-white mx-auto shadow-xl shadow-rose-200">
                         <CalendarIcon size={36} strokeWidth={3} />

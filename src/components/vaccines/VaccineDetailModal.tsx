@@ -13,6 +13,7 @@ import {
     Loader2,
     ExternalLink
 } from "lucide-react";
+import { formatScheduleAge, formatVaccineAge } from "@/lib/vaccine-age";
 
 type ProtectionItem = {
     icon: string;
@@ -65,20 +66,7 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLab
         sourceLabel?: string;
         sourceUrl?: string;
     };
-    const ageLabel = (() => {
-        const days = vaccine.recommendedAgeDays;
-        if (days === 0) return "Naissance";
-        if (days === 42) return "6 semaines";
-        if (days === 70) return "10 semaines";
-        if (days === 98) return "14 semaines";
-        if (days === 180) return "6 mois";
-        if (days === 210) return "7 mois";
-        if (days === 270) return "9 mois";
-        if (days === 450) return "15 mois";
-        if (days === 730) return "24 mois";
-        if (days === 9 * 365) return "9 à 14 ans";
-        return vaccine.recommendedAge === 0 ? "Naissance" : `${vaccine.recommendedAge} mois`;
-    })();
+    const ageLabel = formatVaccineAge(vaccine);
     const doseLabel = vaccine.doseNumber === 0
         ? "Dose naissance"
         : scheduleRules.totalDoses
@@ -170,7 +158,7 @@ export default function VaccineDetailModal({ vaccine, isOpen, onClose, actionLab
                                                 key={`${age}-${index}`}
                                                 className="rounded-full border border-white bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm"
                                             >
-                                                {index + 1}. {age}
+                                                {index + 1}. {formatScheduleAge(age)}
                                             </span>
                                         ))}
                                     </div>

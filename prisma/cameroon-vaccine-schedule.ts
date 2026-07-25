@@ -64,7 +64,7 @@ const series = {
     sideEffectsRare: ["Réaction indésirable grave, extrêmement rare"],
     didYouKnow: "Les campagnes antipolio peuvent ajouter des doses en dehors du calendrier de routine.",
     totalDoses: 4,
-    scheduleAges: ["Naissance", "6 semaines", "10 semaines", "14 semaines"],
+    scheduleAges: ["Naissance", "6 semaines (1 mois et demi)", "10 semaines (2 mois et demi)", "14 semaines (3 mois et demi)"],
     schedule: "ROUTINE",
   },
   HEPB: {
@@ -78,7 +78,7 @@ const series = {
     sideEffectsRare: rareInjectionEffects,
     didYouKnow: "Les doses suivantes contre l’hépatite B sont incluses dans le vaccin pentavalent.",
     totalDoses: 4,
-    scheduleAges: ["Naissance", "6 semaines", "10 semaines", "14 semaines"],
+    scheduleAges: ["Naissance", "6 semaines (1 mois et demi)", "10 semaines (2 mois et demi)", "14 semaines (3 mois et demi)"],
     schedule: "ROUTINE",
   },
   PENTA: {
@@ -92,7 +92,7 @@ const series = {
     sideEffectsRare: ["Cris persistants ou réaction allergique, rares"],
     didYouKnow: "Un intervalle minimal de 28 jours sépare les doses de la série primaire.",
     totalDoses: 3,
-    scheduleAges: ["6 semaines", "10 semaines", "14 semaines"],
+    scheduleAges: ["6 semaines (1 mois et demi)", "10 semaines (2 mois et demi)", "14 semaines (3 mois et demi)"],
     schedule: "ROUTINE",
   },
   PCV13: {
@@ -106,7 +106,7 @@ const series = {
     sideEffectsRare: rareInjectionEffects,
     didYouKnow: "Les trois doses accompagnent les contacts du vaccin pentavalent.",
     totalDoses: 3,
-    scheduleAges: ["6 semaines", "10 semaines", "14 semaines"],
+    scheduleAges: ["6 semaines (1 mois et demi)", "10 semaines (2 mois et demi)", "14 semaines (3 mois et demi)"],
     schedule: "ROUTINE",
   },
   ROTA: {
@@ -120,7 +120,7 @@ const series = {
     sideEffectsRare: ["Invagination intestinale, très rare"],
     didYouKnow: "Le produit utilisé et l’âge de l’enfant doivent être confirmés par le centre de vaccination.",
     totalDoses: 2,
-    scheduleAges: ["6 semaines", "10 semaines"],
+    scheduleAges: ["6 semaines (1 mois et demi)", "10 semaines (2 mois et demi)"],
     schedule: "ROUTINE",
   },
   VPI: {
@@ -134,7 +134,7 @@ const series = {
     sideEffectsRare: rareInjectionEffects,
     didYouKnow: "Le VPI et le VPO sont complémentaires dans la stratégie d’éradication de la poliomyélite.",
     totalDoses: 2,
-    scheduleAges: ["14 semaines", "9 mois"],
+    scheduleAges: ["14 semaines (3 mois et demi)", "9 mois"],
     schedule: "ROUTINE",
   },
   VITA: {

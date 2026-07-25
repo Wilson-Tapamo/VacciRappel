@@ -1,0 +1,18 @@
+
+> vacci-rappel@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.136:3000
+- Environments: .env
+
+✓ Starting...
+✓ Ready in 7.5s
+ GET /api/auth/error?error=Configuration 200 in 15.4s
+ GET /api/auth/error?error=Configuration 500 in 536ms (compile: 40ms, render: 496ms)
+ GET /api/auth/error?error=Configuration 500 in 54ms (compile: 28ms, render: 25ms)
+○ Compiling /offline ...
+ GET /offline 200 in 23.9s (compile: 19.1s, render: 4.8s)
+ GET /offline 200 in 669ms (compile: 28ms, render: 640ms)
+[?25h

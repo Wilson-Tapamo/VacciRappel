@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Check, Clock, ChevronRight, User, Calendar } from "lucide-react";
+import { formatVaccineAge } from "@/lib/vaccine-age";
 
 
 export default function VaccinationTimeline({ childrenData }: { childrenData: any[] }) {
@@ -89,7 +90,7 @@ export default function VaccinationTimeline({ childrenData }: { childrenData: an
                                     </div>
                                     <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl text-slate-500 border border-slate-100/50">
                                         <Clock size={14} />
-                                        <span className="text-[11px] font-bold">{record.vaccine?.recommendedAge} mois</span>
+                                        <span className="text-[11px] font-bold">{formatVaccineAge(record.vaccine)}</span>
                                     </div>
                                 </div>
                             </div>
